@@ -21,7 +21,7 @@ jobs:
         run: |
           set -eu
           echo "Publising agent helm chart..."
-          sed 's/{{version}}/${{ steps.get-version.outputs.version}}/' Chart.yaml > ChartTemp.yaml
+          sed 's/0.0.0-iam-am-changed-in-ci/${{ steps.get-version.outputs.version}}/' Chart.yaml > ChartTemp.yaml
           mv ChartTemp.yaml Chart.yaml
           helm package .
           curl -u ${{ secrets.ARTIFACTORY_USER }}:${{ secrets.ARTIFACTORY_TOKEN }} -x PUT "${ARMORY_JFROG_CHARTS_URL}" -T remote-network-agent-${{ steps.get-version.outputs.version}}.tgz
