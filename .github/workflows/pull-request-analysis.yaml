@@ -11,10 +11,10 @@ jobs:
   pra:
     name: Pull Request Analysis
     runs-on: ubuntu-latest
+    container:
+      image: quintush/helm-unittest:3.7.1-0.2.8
     steps:
       - name: run helm chart unit tests
-        uses: docker://quintush/helm-unittest:3.7.1-0.2.8
-        with:
-          entrypoint: >-
-            helm unittest --helm3 .
-            helm package .
+        run: |
+          helm unittest --helm3 .
+          helm package .
