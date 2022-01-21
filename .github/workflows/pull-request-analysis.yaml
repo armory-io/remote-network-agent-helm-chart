@@ -12,6 +12,7 @@ jobs:
     name: Pull Request Analysis
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v2
       - name: run helm chart unit tests
         run: |
           helm plugin install https://github.com/quintush/helm-unittest
