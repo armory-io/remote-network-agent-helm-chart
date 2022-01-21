@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: remote-network-agent-deployment
+  labels:
+    {{- include "armory-remote-network-agent.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount | default 2 }}
+  selector:
+    matchLabels:
+      {{- include "armory-remote-network-agent.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- include "armory-remote-network-agent.pod-annotations" . | nindent 6 }}
+      labels:
+        {{- include "armory-remote-network-agent.selectorLabels" . | nindent 8 }}
+        {{- include "armory-remote-network-agent.pod-labels" . | trim | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: remote-network-agent-service-account
+      containers:
+        - name: remote-network-agent
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            {{- if .Values.proxy.enabled -}}
+              {{- include "armory-remote-network-agent.proxy-settings" . | nindent 12 }}
+            {{- end }}
+            {{- include "armory-remote-network-agent.pod-env-vars" . | nindent 12 }}
+            - name: ADDITIONAL_JVM_OPTS
+              value: >-
+                -Darmory.iam.oidc.client-id={{ include "armory-remote-network-agent.client-id" . }}
+                -Darmory.iam.oidc.client-secret={{ include "armory-remote-network-agent.client-secret" . }}
+                {{- if .Values.kubernetes.enableClusterAccountMode }}
+                -Dkubernetes-cluster-mode-enabled=true
+                {{- end }}
+                {{ include "armory-remote-network-agent.agent-identifier" . | trim }}
+            {{- if .Values.extraOpts }}
+              {{- range $i, $value := .Values.extraOpts }}
+                {{ $value }}
+              {{- end }}
+            {{- end }}

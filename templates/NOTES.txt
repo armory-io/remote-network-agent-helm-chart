@@ -1,0 +1,12 @@
+Armory Remote Network Agent successfully installed or upgraded.
+
+run the following kubectl command
+
+> kubectl get pods
+
+NAME                                               READY   STATUS    RESTARTS   AGE
+remote-network-agent-deployment-66956bf5cf-h75sx   1/1     Running   0          1m
+
+When you see that the deployment is running you should be able to go to the following page and confirm your agent's connection with Armory.
+
+https://console.cloud.armory.io/configuration/agents

@@ -1,0 +1,89 @@
+# clientId and clientSecret are your Armory Cloud Client Credentials, they must have the `connect:agentHub` scope
+# Go to https://console.cloud.armory.io/configuration/credentials to create credentials or add the scope, if you haven't
+#
+# You can configure the client id and secret using any Armory Enterprise Secrets token.
+#
+# EX: using kubernetes secrets
+# Save the client credentials as a kubernetes secret
+# kubectl -ns armory-remote-network-agent create secret generic rna-client-credentials --type=string --from-literal=client-secret=xxx-yyy-ooo --from-literal=client-id=zzz-ooo-qqq
+# Set the clientSecret value as
+# clientSecret: encrypted:k8s!n:rna-client-credentials!k:client-secret
+#
+# EX: using AWS secrets manager
+# ex: clientSecret: encrypted:secrets-manager!r:us-west-2!s:some-aws-sm-secret-name!k:client-secret
+# See:
+# - https://docs.armory.io/armory-enterprise/armory-admin/secrets/
+# - https://docs.armory.io/armory-enterprise/armory-admin/secrets/secrets-kubernetes/ (ignore the note saying it only works with operator, it has been back ported to RNA)
+# - https://docs.armory.io/armory-enterprise/armory-admin/secrets/secrets-vault/
+# - https://docs.armory.io/armory-enterprise/armory-admin/secrets/secrets-aws-sm/
+# - https://docs.armory.io/armory-enterprise/armory-admin/secrets/secrets-gcs/
+# - https://docs.armory.io/armory-enterprise/armory-admin/secrets/secrets-s3/
+#
+# If you have a process for injecting secrets as env vars, such as a vault injector sidecar, you can set the client secret to an env var here.
+# ex: clientSecret: ${MY_CUSTOM_ENV_VAR}
+# ex: https://www.vaultproject.io/docs/platform/k8s/injector
+#
+# It is NOT recommended that you use the plain-text value of your client secret in the values file or as an arg to the helm chart
+clientId:
+clientSecret:
+
+#############################################################################
+#
+# All settings below this line are optional
+#
+#############################################################################
+# Defaults to the name used when creating the credentials for this agent.
+# This is that name that pipelines must reference to deploy to the cluster that the agent is running in.
+agentIdentifier:
+
+replicaCount: 2
+
+image:
+  repository: armory/remote-network-agent
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: ""
+
+# imagePullSecrets:
+#  - name: regcred
+imagePullSecrets: []
+
+# Proxy settings if the agent needs to go through a proxy to connect the agent-hub
+proxy:
+  enabled: false
+  scheme: https # must be http or https
+  host: proxy.internal.example.com
+  port: 443
+
+# When Kubernetes cluster account mode enabled, it will create a service account, cluster role, and cluster role binding
+# The created service account w/ cluster role binding is applied to the agent.
+# The agent then registers its self as a deployable Kubernetes target from within Armory Cloud.
+#
+# When Kubernetes cluster account mode is disabled, the agent only allows you to make network calls to networked resources.
+# You will have to configure Kubernetes Accounts in the Armory Cloud Console to have deployable Kubernetes targets.
+kubernetes:
+  enableClusterAccountMode: true
+  serviceAccount:
+    # Annotations to add to the service account
+    annotations: {}
+
+# Additional environment variables to add to the pods
+# podEnvironmentVariables:
+#  - name: FOO
+#    value: bar
+podEnvironmentVariables: []
+
+# Additional labels to add to the pods:
+# podLabels:
+#   key: value
+podLabels: {}
+
+# Additional annotations for pods
+# podAnnotations:
+#   key: value
+podAnnotations: {}
+
+# Pass extra opts to the agent, such as
+# - "-Dcolor=true"
+# - "-Dlogging.level.io.armory.cloud.wormhole=DEBUG"
+extraOpts: []

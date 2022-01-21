@@ -1,0 +1,99 @@
+suite: rna kubernetes cluster mode tests
+templates:
+  - deployment.yaml
+  - cluster-role.yaml
+  - cluster-role-binding.yaml
+  - service-account.yaml
+tests:
+  - it: enables the cluster mode system property by default
+    template: deployment.yaml
+    set:
+      clientId: muh-client-id
+      clientSecret: muh-client-secret
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].env[0].name
+          value: "ADDITIONAL_JVM_OPTS"
+      - matchRegex:
+          path: spec.template.spec.containers[0].env[0].value
+          pattern: .*?-Dkubernetes-cluster-mode-enabled=true.*?
+  - it: disables the cluster mode system property when kubernetes.enableClusterAccountMode is set to false
+    template: deployment.yaml
+    set:
+      clientId: muh-client-id
+      clientSecret: muh-client-secret
+      kubernetes:
+        enableClusterAccountMode: false
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].env[0].name
+          value: "ADDITIONAL_JVM_OPTS"
+      - notMatchRegex:
+          path: spec.template.spec.containers[0].env[0].value
+          pattern: .*?-Dkubernetes-cluster-mode-enabled.*?
+  - it: creates a cluster role when kubernetes.enableClusterAccountMode is set to true
+    template: cluster-role.yaml
+    set:
+      clientId: muh-client-id
+      clientSecret: muh-client-secret
+      kubernetes:
+        enableClusterAccountMode: true
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: ClusterRole
+  - it: does not create a cluster role when kubernetes.enableClusterAccountMode is set to false
+    template: cluster-role.yaml
+    set:
+      clientId: muh-client-id
+      clientSecret: muh-client-secret
+      kubernetes:
+        enableClusterAccountMode: false
+    asserts:
+      - hasDocuments:
+          count: 0
+  - it: creates a cluster role binding when kubernetes.enableClusterAccountMode is set to true
+    template: cluster-role-binding.yaml
+    set:
+      clientId: muh-client-id
+      clientSecret: muh-client-secret
+      kubernetes:
+        enableClusterAccountMode: true
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: ClusterRoleBinding
+  - it: does not create a cluster role binding when kubernetes.enableClusterAccountMode is set to false
+    template: cluster-role-binding.yaml
+    set:
+      clientId: muh-client-id
+      clientSecret: muh-client-secret
+      kubernetes:
+        enableClusterAccountMode: false
+    asserts:
+      - hasDocuments:
+          count: 0
+  - it: creates a service account when kubernetes.enableClusterAccountMode is set to true
+    template: service-account.yaml
+    set:
+      clientId: muh-client-id
+      clientSecret: muh-client-secret
+      kubernetes:
+        enableClusterAccountMode: true
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: ServiceAccount
+  - it: does not create a service account when kubernetes.enableClusterAccountMode is set to false
+    template: service-account.yaml
+    set:
+      clientId: muh-client-id
+      clientSecret: muh-client-secret
+      kubernetes:
+        enableClusterAccountMode: false
+    asserts:
+      - hasDocuments:
+          count: 0

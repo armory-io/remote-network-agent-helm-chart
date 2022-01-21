@@ -1,0 +1,153 @@
+suite: remote network agent deployment tests
+templates:
+  - deployment.yaml
+tests:
+  - it: requires client id
+    asserts:
+      - failedTemplate:
+          errorMessage: You must set clientId
+  - it: requires client secret
+    set:
+      clientId: encrypted:k8s!n:rna-client-credentials!k:client-id
+    asserts:
+      - failedTemplate:
+          errorMessage: You must set clientSecret
+  - it: only requires client id and secret to render
+    set:
+      clientId: encrypted:k8s!n:rna-client-credentials!k:client-id
+      clientSecret: encrypted:k8s!n:rna-client-credentials!k:client-secret
+    asserts:
+      - isKind:
+          of: Deployment
+      - equal:
+          path: spec.template.spec.containers[0].env[0].name
+          value: "ADDITIONAL_JVM_OPTS"
+      - matchRegex:
+          path: spec.template.spec.containers[0].env[0].value
+          pattern: .*?-Darmory.iam.oidc.client-id=encrypted:k8s!n:rna-client-credentials!k:client-id.*?
+      - matchRegex:
+          path: spec.template.spec.containers[0].env[0].value
+          pattern: .*?-Darmory.iam.oidc.client-secret=encrypted:k8s!n:rna-client-credentials!k:client-secret.*?
+  - it: adds env vars to the rna pod
+    set:
+      clientId: encrypted:k8s!n:rna-client-credentials!k:client-id
+      clientSecret: encrypted:k8s!n:rna-client-credentials!k:client-secret
+      podEnvironmentVariables:
+        - name: FOO
+          value: bar
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].env[0].name
+          value: "FOO"
+      - equal:
+          path: spec.template.spec.containers[0].env[0].value
+          value: "bar"
+  - it: sets the agent identifier system prop if agentIdentifier is set
+    set:
+      clientId: encrypted:k8s!n:rna-client-credentials!k:client-id
+      clientSecret: encrypted:k8s!n:rna-client-credentials!k:client-secret
+      agentIdentifier: muh-super-cool-agent
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].env[0].name
+          value: "ADDITIONAL_JVM_OPTS"
+      - matchRegex:
+          path: spec.template.spec.containers[0].env[0].value
+          pattern: .*?-Dagent-identifier=muh-super-cool-agent.*?
+  - it: maps podAnnotations to annotations on the agent pod
+    set:
+      clientId: muh-client-id
+      clientSecret: muh-client-secret
+      podAnnotations:
+        foo: bar
+    asserts:
+      - equal:
+          path: spec.template.metadata.annotations.[foo]
+          value: bar
+  - it: maps podLabels to labels on the agent pod
+    set:
+      clientId: muh-client-id
+      clientSecret: muh-client-secret
+      podLabels:
+        labelKey: labelValue
+    asserts:
+      - equal:
+          path: spec.template.metadata.labels.[labelKey]
+          value: labelValue
+  - it: maps podEnvironmentVariables to environment vars on the deployment
+    set:
+      clientId: muh-client-id
+      clientSecret: muh-client-secret
+      podEnvironmentVariables:
+        - name: FOO
+          value: BAR
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].env[0].name
+          value: "FOO"
+      - equal:
+          path: spec.template.spec.containers[0].env[0].value
+          value: "BAR"
+  - it: configures proxy system props, if proxy settings are enabled as values
+    set:
+      clientId: muh-client-id
+      clientSecret: muh-client-secret
+      proxy:
+        enabled: true
+        scheme: https
+        host: muh-proxy.internal.example.com
+        port: 9090
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].env[0].name
+          value: "PROXY_OPTS"
+      - equal:
+          path: spec.template.spec.containers[0].env[0].value
+          value: "-Dhttps.proxyHost=muh-proxy.internal.example.com -Dhttps.proxyPort=9090"
+  - it: uses the replica count value
+    set:
+      clientId: muh-client-id
+      clientSecret: muh-client-secret
+      replicaCount: 10
+    asserts:
+      - equal:
+          path: spec.replicas
+          value: 10
+  - it: uses image settings as defined
+    set:
+      clientId: muh-client-id
+      clientSecret: muh-client-secret
+      image:
+        repository: some/other-repo
+        pullPolicy: Always
+        tag: muh-awesome-tag
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "some/other-repo:muh-awesome-tag"
+      - equal:
+          path: spec.template.spec.containers[0].imagePullPolicy
+          value: "Always"
+  - it: uses image pull secrets as defined
+    set:
+      clientId: muh-client-id
+      clientSecret: muh-client-secret
+      imagePullSecrets:
+        - name: regcred
+    asserts:
+      - equal:
+          path: spec.template.spec.imagePullSecrets[0].name
+          value: "regcred"
+  - it: adds defined extraOpts to the ADDITIONAL_OPTS env var
+    set:
+      clientId: muh-client-id
+      clientSecret: muh-client-secret
+      extraOpts:
+        - "-Dfoo=bar"
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].env[0].name
+          value: "ADDITIONAL_JVM_OPTS"
+      - matchRegex:
+          path: spec.template.spec.containers[0].env[0].value
+          pattern: .*?-Dfoo=bar.*?
