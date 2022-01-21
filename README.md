@@ -79,7 +79,7 @@ helm install armory-rna armory/aurora \
       --set agent-k8s.clientSecret=<clientSecret-for-rna>
 ```
 
-Then you can switch that release to this chart with the following commands and all your setting will be mapped.
+Then you can switch that release to this chart with the following commands and all your settings will be mapped.
 
 ```shell
 helm repo update
