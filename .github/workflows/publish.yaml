@@ -26,8 +26,8 @@ jobs:
           [ -d helm ] || mkdir helm
           cd helm
           helm package ../
-          curl -f -u ${{secrets.ARTIFACTORY_USER}}:${{secrets.ARTIFACTORY_TOKEN}} -o "index.yaml" "${{env.ARMORY_JFROG_CHARTS_URL}}/index.yaml"
+          curl -v -f -u ${{secrets.ARTIFACTORY_USER}}:${{secrets.ARTIFACTORY_TOKEN}} -o "index.yaml" "${{env.ARMORY_JFROG_CHARTS_URL}}/index.yaml"
           helm repo index --merge index.yaml --url "${{env.ARMORY_JFROG_CHARTS_URL}}" .
           for f in *; do
-            curl -f -u ${{secrets.JFROG_USER}}:${{secrets.JFROG_PASSWORD}} -X PUT "${{env.ARMORY_JFROG_CHARTS_URL}}/${f}" -T "${PWD}/${f}"
+            curl -v -f -u ${{secrets.JFROG_USER}}:${{secrets.JFROG_PASSWORD}} -X PUT "${{env.ARMORY_JFROG_CHARTS_URL}}/${f}" -T "${PWD}/${f}"
           done
