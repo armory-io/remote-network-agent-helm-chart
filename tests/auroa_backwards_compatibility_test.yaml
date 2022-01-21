@@ -5,7 +5,8 @@ description: >
   > helm install armory-rna armory/aurora \
       --set agent-k8s.accountName=<target-cluster-name> \
       --set agent-k8s.clientId=<clientID-for-rna> \
-      --set agent-k8s.clientSecret=<clientSecret-for-rna> \
+      --set agent-k8s.clientSecret=<clientSecret-for-rna>
+  
   Can upgrade / switch to the remote-network-agent chart via
 
   > helm upgrade armory-rna armory/remote-network-agent
