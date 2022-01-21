@@ -9,6 +9,13 @@ on:
   push:
     branches:
       - master
+    paths-ignore:
+      - 'README.md'
+      - 'docs/**'
+      - '**/README.md'
+      - 'tests/**'
+      - '.gitignore'
+      - '.helmignore'
 
 jobs:
   create-release:
