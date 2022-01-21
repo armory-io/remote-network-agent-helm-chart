@@ -1,0 +1,18 @@
+###
+#
+# On commit to master trigger a release which will trigger post-release jobs (build, bake and deploy)
+#
+###
+name: Create Github Release
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  create-release:
+    name: Create Github Release
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "not implemented yet!" && exit 1
