@@ -16,5 +16,6 @@ jobs:
     steps:
       - name: run helm chart unit tests
         run: |
-          /usr/bin/helm unittest --helm3 .
-          /usr/bin/helm package .
+          helm --version
+          helm unittest --helm3 .
+          helm package .
