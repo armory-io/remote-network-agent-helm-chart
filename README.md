@@ -3,6 +3,14 @@ Helm Chart for Armory's Remote Network Agent
 
 # Basic Usage
 
+Put your client credentials in a kubernetes secret (see [values.yaml](values.yaml) for more secrets management options)
+
+```shell
+kubectl create secret generic rna-client-credentials --type=string --from-literal=client-secret=xxx-yyy-ooo --from-literal=client-id=zzz-ooo-qqq
+```
+
+And choose one of the following basic use cases.
+
 ## Basic installation with kubernetes-cluster-mode enabled, without customizing kubernetes account name
 ```shell
 # Optionally Add Armory Chart repo, if you haven't
