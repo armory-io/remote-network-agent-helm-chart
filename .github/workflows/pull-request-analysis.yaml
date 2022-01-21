@@ -13,6 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: run helm chart unit tests
-        uses: docker://quintush/helm-unittest:3.7.1-0.2.8
-        with:
-          args: --helm3 .
+        run: |
+          helm plugin install https://github.com/quintush/helm-unittest
+          helm unittest --helm3 .
+          helm package .
