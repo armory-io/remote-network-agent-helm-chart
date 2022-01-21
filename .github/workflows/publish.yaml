@@ -1,0 +1,27 @@
+name: Publish Chart
+
+on:
+  release:
+    types: [released]
+
+jobs:
+  publish-chart:
+    name: Publish Chart
+    runs-on: ubuntu-latest
+    env:
+      ARMORY_JFROG_CHARTS_URL: https://armory.jfrog.io/artifactory/charts
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.release.tag_name }}
+      - name: Get version
+        id: get-version
+        run: echo ::set-output name=version::${GITHUB_REF/refs\/tags\/v/}
+      - name: Publish Remote Network Agent Helm Package
+        run: |
+          set -eu
+          echo "Publising agent helm chart..."
+          sed 's/{{version}}/${{ steps.get-version.outputs.version}}/' Chart.yaml > ChartTemp.yaml
+          mv ChartTemp.yaml Chart.yaml
+          helm package .
+          curl -u ${{ secrets.ARTIFACTORY_USER }}:${{ secrets.ARTIFACTORY_TOKEN }} -x PUT "${ARMORY_JFROG_CHARTS_URL}" -T remote-network-agent-${{ steps.get-version.outputs.version}}.tgz
