@@ -133,7 +133,7 @@ tests:
       clientId: muh-client-id
       clientSecret: muh-client-secret
       imagePullSecrets:
-        - name: regcredasdf
+        - name: regcred
     asserts:
       - equal:
           path: spec.template.spec.imagePullSecrets[0].name
