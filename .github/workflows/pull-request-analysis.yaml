@@ -11,8 +11,8 @@ jobs:
   pull-request-analysis:
     name: Pull Request Analysis
     runs-on: ubuntu-latest
-    container:
-      image: quintush/helm-unittest:3.7.1-0.2.8
+#    container:
+#      image: quintush/helm-unittest:3.7.1-0.2.8
     steps:
       - name: run helm chart unit tests
         run: |
