@@ -78,6 +78,14 @@ helm upgrade --install -f your-values-file.yaml armory-rna armory/remote-network
 
 # Migrating from the Armory/Aurora meta helm chart
 
+## Step 1: Update Client Credentials Scope in the Cloud Console
+
+Go to the [Cloud Console](https://console.cloud.armory.io/configuration/credentials) and update the credentials you are using for your agent to have the newly required `connect:agentHub` scope. 
+
+This scope is required to connect to the new agent-hub endpoint https://agent-hub.cloud.armory.io
+
+## Step 2: Migrate your agent release from armory/aurora -> armory/remote-network-agent
+
 If you installed the the armory/aurora helm chart like the following
 
 ```shell
@@ -88,6 +96,7 @@ helm install armory-rna armory/aurora \
 ```
 
 Then you can switch that release to this chart with the following commands and all your settings will be mapped.
+The key here is that you are using the same release name `armory-rna` but changing the chart that the release is referencing.
 
 ```shell
 helm repo update
