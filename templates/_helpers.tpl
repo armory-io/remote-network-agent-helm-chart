@@ -33,9 +33,6 @@ HTTP|HTTPS Proxy Settings
   value: >-
     -D{{.Values.proxy.scheme}}.proxyHost={{ .Values.proxy.host }}
     -D{{.Values.proxy.scheme}}.proxyPort={{ .Values.proxy.port }}
-    {{- if not (empty .Values.proxy.nonProxyHosts) }}
-    -Dhttp.nonProxyHosts={{- .Values.proxy.nonProxyHosts }}
-    {{- end }}
 {{- end }}
 
 {{/* function for sourcing the client id */}}
