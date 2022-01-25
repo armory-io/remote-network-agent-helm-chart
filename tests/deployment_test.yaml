@@ -104,6 +104,23 @@ tests:
       - equal:
           path: spec.template.spec.containers[0].env[0].value
           value: "-Dhttps.proxyHost=muh-proxy.internal.example.com -Dhttps.proxyPort=9090"
+  - it: configures proxy system props, if proxy settings are enabled as values with nonProxyHosts value
+    set:
+      clientId: muh-client-id
+      clientSecret: muh-client-secret
+      proxy:
+        enabled: true
+        scheme: https
+        host: muh-proxy.internal.example.com
+        port: 9090
+        nonProxyHosts: 10.*
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].env[0].name
+          value: "PROXY_OPTS"
+      - equal:
+          path: spec.template.spec.containers[0].env[0].value
+          value: "-Dhttps.proxyHost=muh-proxy.internal.example.com -Dhttps.proxyPort=9090 -Dhttp.nonProxyHosts=10.*"
   - it: uses the replica count value
     set:
       clientId: muh-client-id
