@@ -52,8 +52,18 @@ imagePullSecrets: []
 proxy:
   enabled: false
   scheme: https # must be http or https
+  # The hostname, or address, of the proxy server
   host: proxy.internal.example.com
+  # The port number of the proxy server.
   port: 443
+  # Indicates the hosts that should be accessed without going through the proxy.
+  # Typically this defines internal hosts.
+  # The value of this property is a list of hosts, separated by the '|' character.
+  # In addition the wildcard character '*' can be used for pattern matching.
+  # For example nonProxyHosts: '*.foo.com|localhost' will indicate that every hosts in the foo.com domain and the localhost should be accessed directly even if a proxy server is specified.
+  # The default value excludes all common variations of the loopback address.
+  # Defaults to 'localhost|127.*|[::1]'
+  nonProxyHosts:
 
 # When Kubernetes cluster account mode enabled, it will create a service account, cluster role, and cluster role binding
 # The created service account w/ cluster role binding is applied to the agent.
