@@ -3,6 +3,14 @@ Helm Chart for Armory's Remote Network Agent
 
 # Basic Usage
 
+Put your client credentials in a kubernetes secret (see [values.yaml](values.yaml) for more secrets management options)
+
+```shell
+kubectl create secret generic rna-client-credentials --type=string --from-literal=client-secret=xxx-yyy-ooo --from-literal=client-id=zzz-ooo-qqq
+```
+
+And choose one of the following basic use cases.
+
 ## Basic installation with kubernetes-cluster-mode enabled, without customizing kubernetes account name
 ```shell
 # Optionally Add Armory Chart repo, if you haven't
@@ -70,6 +78,14 @@ helm upgrade --install -f your-values-file.yaml armory-rna armory/remote-network
 
 # Migrating from the Armory/Aurora meta helm chart
 
+## Step 1: Update Client Credentials Scope in the Cloud Console
+
+Go to the [Cloud Console](https://console.cloud.armory.io/configuration/credentials) and update the credentials you are using for your agent to have the newly required `connect:agentHub` scope. 
+
+This scope is required to connect to the new agent-hub endpoint https://agent-hub.cloud.armory.io
+
+## Step 2: Migrate your agent release from armory/aurora -> armory/remote-network-agent
+
 If you installed the the armory/aurora helm chart like the following
 
 ```shell
@@ -79,7 +95,8 @@ helm install armory-rna armory/aurora \
       --set agent-k8s.clientSecret=<clientSecret-for-rna>
 ```
 
-Then you can switch that release to this chart with the following commands and all your setting will be mapped.
+Then you can switch that release to this chart with the following commands and all your settings will be mapped.
+The key here is that you are using the same release name `armory-rna` but changing the chart that the release is referencing.
 
 ```shell
 helm repo update
