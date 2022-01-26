@@ -6,7 +6,7 @@ Helm Chart for Armory's Remote Network Agent
 Put your client credentials in a kubernetes secret (see [values.yaml](values.yaml) for more secrets management options)
 
 ```shell
-kubectl create secret generic rna-client-credentials --type=string --from-literal=client-secret=xxx-yyy-ooo --from-literal=client-id=zzz-ooo-qqq
+kubectl --namespace armory-rna create secret generic rna-client-credentials --type=string --from-literal=client-secret=xxx-yyy-ooo --from-literal=client-id=zzz-ooo-qqq
 ```
 
 And choose one of the following basic use cases.
@@ -20,7 +20,8 @@ helm repo update
 # Install or Upgrade armory rna chart
 helm upgrade --install armory-rna armory/remote-network-agent \
     --set clientId='encrypted:k8s!n:rna-client-credentials!k:client-id' \
-    --set clientSecret='encrypted:k8s!n:rna-client-credentials!k:client-secret'
+    --set clientSecret='encrypted:k8s!n:rna-client-credentials!k:client-secret' \
+    --namespace armory-rna
 ```
 
 ## installation with kubernetes-cluster-mode enabled + customizing the agent identifier
@@ -33,7 +34,8 @@ helm repo update
 helm upgrade --install armory-rna armory/remote-network-agent \
     --set clientId='encrypted:k8s!n:rna-client-credentials!k:client-id' \
     --set clientSecret='encrypted:k8s!n:rna-client-credentials!k:client-secret' \
-    --set agentIdentifier=fieldju-microk8s-cluster
+    --set agentIdentifier=fieldju-microk8s-cluster \
+    --namespace armory-rna
 ```
 
 ## Installation with kubernetes-cluster-mode disabled
@@ -46,7 +48,8 @@ helm repo update
 helm upgrade --install armory-rna armory/remote-network-agent \
     --set clientId='encrypted:k8s!n:rna-client-credentials!k:client-id' \
     --set clientSecret='encrypted:k8s!n:rna-client-credentials!k:client-secret' \
-    --set kubernetes.enableClusterAccountMode=false
+    --set kubernetes.enableClusterAccountMode=false \
+    --namespace armory-rna
 ```
 
 ## Installation with kubernetes-cluster-mode disabled + customizing the agent identifier
@@ -60,7 +63,8 @@ helm upgrade --install armory-rna armory/remote-network-agent \
     --set clientId='encrypted:k8s!n:rna-client-credentials!k:client-id' \
     --set clientSecret='encrypted:k8s!n:rna-client-credentials!k:client-secret' \
     --set kubernetes.enableClusterAccountMode=false \
-    --set agentIdentifier=fieldju-microk8s-cluster
+    --set agentIdentifier=fieldju-microk8s-cluster \
+    --namespace armory-rna
 ```
 
 # Advanced Usage
@@ -73,7 +77,7 @@ helm repo add armory https://armory.jfrog.io/artifactory/charts
 # Update repo to fetch latest armory charts
 helm repo update
 # Install or Upgrade armory rna chart
-helm upgrade --install -f your-values-file.yaml armory-rna armory/remote-network-agent
+helm upgrade --install -f your-values-file.yaml armory-rna armory/remote-network-agent --namespace armory-rna
 ```
 
 # Migrating from the Armory/Aurora meta helm chart
@@ -93,6 +97,7 @@ helm install armory-rna armory/aurora \
       --set agent-k8s.accountName=<target-cluster-name> \
       --set agent-k8s.clientId=<clientID-for-rna> \
       --set agent-k8s.clientSecret=<clientSecret-for-rna>
+      --namespace armory-rna
 ```
 
 Then you can switch that release to this chart with the following commands and all your settings will be mapped.
@@ -100,7 +105,7 @@ The key here is that you are using the same release name `armory-rna` but changi
 
 ```shell
 helm repo update
-helm upgrade armory-rna armory/remote-network-agent
+helm upgrade armory-rna armory/remote-network-agent --namespace armory-rna
 ```
 
 Please note that we now support and highly encourage the use of a secret's manager.
@@ -113,7 +118,8 @@ kubectl create secret generic rna-client-credentials --type=string --from-litera
 helm repo update
 helm upgrade armory-rna armory/remote-network-agent \
   --set agent-k8s.clientId='encrypted:k8s!n:rna-client-credentials!k:client-id' \
-  --set agent-k8s.clientSecret='encrypted:k8s!n:rna-client-credentials!k:client-secret'
+  --set agent-k8s.clientSecret='encrypted:k8s!n:rna-client-credentials!k:client-secret' \
+  --namespace armory-rna
 ```
 
 See [values.yaml](values.yaml) for more supported secret stores.
