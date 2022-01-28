@@ -124,6 +124,39 @@ helm upgrade armory-rna armory/remote-network-agent \
 
 See [values.yaml](values.yaml) for more supported secret stores.
 
+# Monitoring
+
+We expose a Prometheus aka OpenMetrics scrape endpoint on the pod on `/prometheus` and port `8080`
+
+## Configuring Agent for Scrapping
+
+Assuming you use prometheus with the default settings, where it scrapes metrics from a pod based on its annotations.
+You can configure the Agent to have its metrics scrapped by adding those annotations to the `podAnnotations` value.
+
+Update your chart values, ex:
+```yaml
+...
+podAnnotations:
+  prometheus.io/scrape: true
+  prometheus.io/path: /prometheus
+  prometheus.io/port: 8080
+...
+```
+
+## Customizing the Metrics
+
+In advanced use cases you might want to blacklist metrics or add custom tags/labels/dimensions to your metrics. 
+
+See the official [actuator metrics documentation](https://docs.spring.io/spring-boot/docs/current/reference/html/actuator.html#actuator.metrics)
+
+You can set properties you find in the above docs via the `extraOpts` value option.
+
+Update your chart values, ex:
+```yaml
+extraOpts:
+  - "-Dmanagement.metrics.enable.example.remote=false"
+```
+
 # Development
 
 ## Testing / TDD'ing
