@@ -25,6 +25,14 @@ spec:
         - name: remote-network-agent
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          readinessProbe:
+            httpGet:
+              path: /health/readiness
+              port: 8080
+          livenessProbe:
+            httpGet:
+              path: /health/liveness
+              port: 8080
           env:
             {{- if .Values.proxy.enabled -}}
               {{- include "armory-remote-network-agent.proxy-settings" . | nindent 12 }}
