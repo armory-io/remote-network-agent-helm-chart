@@ -90,4 +90,13 @@ rules:
       - validatingwebhookconfigurations
     verbs:
       - '*'
+  - apiGroups:
+      - "rbac.authorization.k8s.io"
+    resources:
+      - clusterrolebindings
+    verbs:
+      - create
+      - get
+      - update
+      - patch
 {{- end }}
