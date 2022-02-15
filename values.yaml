@@ -73,6 +73,11 @@ proxy:
 # You will have to configure Kubernetes Accounts in the Armory Cloud Console to have deployable Kubernetes targets.
 kubernetes:
   enableClusterAccountMode: true
+  # RBAC permissions that will be granted to the service account for the agent
+  clusterRoleRules:
+    - apiGroups: [ "*" ]
+      resources: [ "*" ]
+      verbs: [ "*" ]
   serviceAccount:
     # Annotations to add to the service account
     annotations: {}
@@ -97,3 +102,4 @@ podAnnotations: {}
 # - "-Dcolor=true"
 # - "-Dlogging.level.io.armory.cloud.wormhole=DEBUG"
 extraOpts: []
+
