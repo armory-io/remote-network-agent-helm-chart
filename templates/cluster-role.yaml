@@ -17,6 +17,7 @@ rules:
       - namespaces
       - namespaces/finalize
       - namespaces/status
+      - nodes
       - pods
       - pods/log
       - pods/status
