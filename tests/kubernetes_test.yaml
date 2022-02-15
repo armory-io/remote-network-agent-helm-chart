@@ -97,3 +97,71 @@ tests:
     asserts:
       - hasDocuments:
           count: 0
+  - it: creates a cluster role with all permissions when kubernetes.enableClusterAccountMode is set to true
+    template: cluster-role.yaml
+    set:
+      clientId: muh-client-id
+      clientSecret: muh-client-secret
+      kubernetes:
+        enableClusterAccountMode: true
+    asserts:
+      - equal:
+          path: rules[0].apiGroups[0]
+          value: "*"
+      - equal:
+          path: rules[0].resources[0]
+          value: "*"
+      - equal:
+          path: rules[0].verbs[0]
+          value: "*"
+  - it: creates a cluster role with custom permissions when kubernetes.enableClusterAccountMode is set to true and perms are overridden
+    template: cluster-role.yaml
+    set:
+      clientId: muh-client-id
+      clientSecret: muh-client-secret
+      kubernetes:
+        enableClusterAccountMode: true
+        clusterRoleRules:
+          - apiGroups:
+              - ""
+            resources:
+              - configmaps
+              - pods
+            verbs:
+              - get
+          - apiGroups:
+              - apps
+            resources:
+              - daemonsets
+              - deployments
+              - replicasets
+            verbs:
+              - create
+    asserts:
+      - equal:
+          path: rules[0].apiGroups[0]
+          value: ""
+      - equal:
+          path: rules[0].resources[0]
+          value: "configmaps"
+      - equal:
+          path: rules[0].resources[1]
+          value: "pods"
+      - equal:
+          path: rules[0].verbs[0]
+          value: "get"
+      - equal:
+          path: rules[1].apiGroups[0]
+          value: "apps"
+      - equal:
+          path: rules[1].resources[0]
+          value: "daemonsets"
+      - equal:
+          path: rules[1].resources[1]
+          value: "deployments"
+      - equal:
+          path: rules[1].resources[2]
+          value: "replicasets"
+      - equal:
+          path: rules[1].verbs[0]
+          value: "create"
