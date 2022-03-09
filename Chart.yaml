@@ -9,7 +9,7 @@ description: Enable the use of Armory Services with your privatly networked reso
 version: "0.0.0-iam-am-changed-in-ci"
 
 # The Agent Version
-appVersion: v2.1.0
+appVersion: v2.1.2
 
 maintainers:
   - name: Armory Engineering
