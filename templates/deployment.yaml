@@ -34,7 +34,7 @@ spec:
               path: /health/liveness
               port: 8080
           startupProbe:
-            initialDelaySeconds: 30
+            initialDelaySeconds: 60
             periodSeconds: 10
             timeoutSeconds: 1
             successThreshold: 1
