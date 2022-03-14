@@ -33,6 +33,15 @@ spec:
             httpGet:
               path: /health/liveness
               port: 8080
+          startupProbe:
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 1
+            successThreshold: 1
+            failureThreshold: 6
+            httpGet:
+              path: /health/liveness
+              port: 8080
           env:
             {{- if .Values.proxy.enabled -}}
               {{- include "armory-remote-network-agent.proxy-settings" . | nindent 12 }}
