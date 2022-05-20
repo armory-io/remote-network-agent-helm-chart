@@ -1,0 +1,72 @@
+#!/usr/bin/env bash
+
+###
+# Ensure that the system has helm installed, since RNA is installed via a helm chart
+##
+verify_that_helm_is_installed() {
+  if ! command -v helm > /dev/null; then
+    echo "Not found."
+    echo "======================================================================================================"
+    echo " Please install helm  https://helm.sh/docs/intro/install/ and ensure that it is on your path."
+    echo ""
+    echo " Restart after installing helm."
+    echo "======================================================================================================"
+    echo ""
+    exit 1
+  fi
+
+  HELM_VERSION=$(helm version --template="{{ .Version  }}")
+  if ! echo "${HELM_VERSION}" | grep --quiet v3; then
+    echo "Helm3 required but found ${HELM_VERSION}"
+    exit 1
+  fi
+}
+
+###
+# Ensure that the system has kubernetes installed, since we store RNA's OIDC Client ID and
+# Client Secret as a kubernetes Secret
+##
+verify_that_kubectl_is_installed() {
+    if ! command -v kubectl > /dev/null; then
+      echo "Not found."
+      echo "======================================================================================================"
+      echo " Please install kubectl https://kubernetes.io/docs/tasks/tools/ and ensure that it is on your path."
+      echo ""
+      echo " Restart after installing kubectl."
+      echo "======================================================================================================"
+      echo ""
+      exit 1
+    fi
+}
+
+main() {
+  verify_that_kubectl_is_installed
+  verify_that_helm_is_installed
+
+  set -e
+  set -o pipefail
+
+  CLIENT_ID="${1}"
+  if [[ -z "$CLIENT_ID" ]]; then
+      read -r -p "Enter your OIDC Client ID for your RNA installation: " CLIENT_ID
+  fi
+
+  CLIENT_SECRET="${2}"
+  if [[ -z "$CLIENT_SECRET" ]]; then
+      read -r -s -p "Enter your OIDC Client Secret for your RNA installation: " CLIENT_SECRET
+  fi
+
+  helm repo add armory https://armory.jfrog.io/artifactory/charts
+  helm repo update
+  kubectl create ns armory-rna
+  kubectl --namespace armory-rna create secret generic rna-client-credentials \
+      --type=string \
+      --from-literal=client-secret="${CLIENT_SECRET}" \
+      --from-literal=client-id="${CLIENT_ID}"
+  helm upgrade --install armory-rna armory/remote-network-agent \
+      --set 'clientId=encrypted:k8s!n:rna-client-credentials!k:client-id' \
+      --set 'clientSecret=encrypted:k8s!n:rna-client-credentials!k:client-secret' \
+      --namespace armory-rna
+}
+
+main "$@"
