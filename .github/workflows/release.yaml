@@ -1,6 +1,6 @@
 ###
 #
-# On commit to master trigger a release which will trigger post-release jobs (build, bake and deploy)
+# On commit to main trigger a release which will trigger post-release jobs (build, bake and deploy)
 #
 ###
 name: Create Github Release
@@ -8,7 +8,7 @@ name: Create Github Release
 on:
   push:
     branches:
-      - master
+      - main
     paths-ignore:
       - 'README.md'
       - 'docs/**'
@@ -44,7 +44,7 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           default_bump: patch
-          release_branches: master
+          release_branches: main
 
       - name: Fetch Refresh
         run: git fetch --prune --tags
