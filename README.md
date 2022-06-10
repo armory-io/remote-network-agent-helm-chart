@@ -67,6 +67,23 @@ helm upgrade --install armory-rna armory/remote-network-agent \
     --namespace armory-rna
 ```
 
+## Installation with CPU and memory request limits 
+```shell
+# Optionally Add Armory Chart repo, if you haven't
+helm repo add armory https://armory.jfrog.io/artifactory/charts
+# Update repo to fetch latest armory charts
+helm repo update
+# Install or Upgrade armory rna chart
+helm upgrade --install armory-rna armory/remote-network-agent \
+    --set clientId='encrypted:k8s!n:rna-client-credentials!k:client-id' \
+    --set clientSecret='encrypted:k8s!n:rna-client-credentials!k:client-secret' \
+    --set memoryRequest=2000m \
+    --set memoryLimit=2500Mi \
+    --set cpuRequest=1500Mi \
+    --set cpuLimit=2500m \
+    --namespace armory-rna
+```
+
 # Advanced Usage
 
 Copy, read, and then edit the [values.yaml](values.yaml) file.

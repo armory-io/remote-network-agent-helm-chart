@@ -128,3 +128,42 @@ annotations:
         {{- end }}
     {{- end }}
 {{- end }}
+
+{{/* function for setting resource limits */}}
+{{- define "armory-remote-network-agent.resource-request-limits" }}
+  {{- $memoryRequest := .Values.memoryRequest -}}
+  {{- $cpuRequest := .Values.cpuRequest -}}
+  {{- $memoryLimit := .Values.memoryLimit -}}
+  {{- $cpuLimit := .Values.cpuLimit -}}
+  {{- if (empty $memoryRequest) }}
+    {{- $memoryRequest = "1500Mi" -}}
+  {{- end }}
+  {{- if (empty $cpuRequest) }}
+    {{- $cpuRequest = "2000m" -}}
+  {{- end }}
+  {{- if (empty $memoryLimit) }}
+    {{- $memoryLimit = "2500Mi" -}}
+  {{- end }}
+  {{- if (empty $cpuLimit) }}
+    {{- $cpuLimit = "2500m" -}}
+  {{- end }}
+  {{- if not (regexMatch "^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$" $memoryRequest)}}
+    {{- fail "value for memoryRequest is not valid" }}
+  {{- end }}
+  {{- if not (regexMatch "^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$" $cpuRequest)}}
+    {{- fail "value for cpuRequest is not valid" }}
+  {{- end }}
+  {{- if not (regexMatch "^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$" $memoryLimit) }}
+    {{- fail "value for memoryLimit is not valid" }}
+  {{- end }}
+  {{- if not (regexMatch "^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$" $cpuLimit)}}
+    {{- fail "value for cpuLimit is not valid" }}
+  {{- end }}
+  resources:
+    requests:
+      memory: {{ $memoryRequest }}
+      cpu: {{ $cpuRequest }}
+    limits:
+      memory: {{ $memoryLimit }}
+      cpu: {{ $cpuLimit }}
+{{- end }}

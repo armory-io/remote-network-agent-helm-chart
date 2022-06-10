@@ -168,3 +168,76 @@ tests:
       - matchRegex:
           path: spec.template.spec.containers[0].env[0].value
           pattern: .*?-Dfoo=bar.*?
+  - it: sets the resource request limits to defaults
+    set:
+      clientId: encrypted:k8s!n:rna-client-credentials!k:client-id
+      clientSecret: encrypted:k8s!n:rna-client-credentials!k:client-secret
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].resources.requests.memory
+          value: "1500Mi"
+      - equal:
+          path: spec.template.spec.containers[0].resources.requests.cpu
+          value: "2000m"
+      - equal:
+          path: spec.template.spec.containers[0].resources.limits.memory
+          value: "2500Mi"
+      - equal:
+          path: spec.template.spec.containers[0].resources.limits.cpu
+          value: "2500m"
+  - it: sets the resource request limits when set
+    set:
+      clientId: encrypted:k8s!n:rna-client-credentials!k:client-id
+      clientSecret: encrypted:k8s!n:rna-client-credentials!k:client-secret
+      memoryRequest: 1Mi
+      memoryLimit: 2Mi
+      cpuRequest: 2m
+      cpuLimit: 3m
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].resources.requests.memory
+          value: "1Mi"
+      - equal:
+          path: spec.template.spec.containers[0].resources.requests.cpu
+          value: "2m"
+      - equal:
+          path: spec.template.spec.containers[0].resources.limits.memory
+          value: "2Mi"
+      - equal:
+          path: spec.template.spec.containers[0].resources.limits.cpu
+          value: "3m"
+  - it: fails when invalid memory request set
+    set:
+      clientId: encrypted:k8s!n:rna-client-credentials!k:client-id
+      clientSecret: encrypted:k8s!n:rna-client-credentials!k:client-secret
+      memoryRequest: 1Potato
+      memoryLimit: 2Mi
+      cpuRequest: 2m
+      cpuLimit: 3m
+    asserts:
+      - failedTemplate:
+          errorMessage: value for memoryRequest is not valid
+  - it: fails when invalid cpu request set
+    set:
+      clientId: encrypted:k8s!n:rna-client-credentials!k:client-id
+      clientSecret: encrypted:k8s!n:rna-client-credentials!k:client-secret
+      cpuRequest: 1Potato
+    asserts:
+      - failedTemplate:
+          errorMessage: value for cpuRequest is not valid
+  - it: fails when invalid memory limit set
+    set:
+      clientId: encrypted:k8s!n:rna-client-credentials!k:client-id
+      clientSecret: encrypted:k8s!n:rna-client-credentials!k:client-secret
+      memoryLimit: 1Potato
+    asserts:
+      - failedTemplate:
+          errorMessage: value for memoryLimit is not valid
+  - it: fails when invalid cpu limit set
+    set:
+      clientId: encrypted:k8s!n:rna-client-credentials!k:client-id
+      clientSecret: encrypted:k8s!n:rna-client-credentials!k:client-secret
+      cpuLimit: 1Potato
+    asserts:
+      - failedTemplate:
+          errorMessage: value for cpuLimit is not valid
