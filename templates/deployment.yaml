@@ -50,6 +50,8 @@ spec:
             {{- include "armory-remote-network-agent.pod-env-vars" . | nindent 12 }}
             - name: ADDITIONAL_JVM_OPTS
               value: >-
+                -Xms1000M
+                -Xmx1000M
                 -Darmory.iam.oidc.client-id={{ include "armory-remote-network-agent.client-id" . }}
                 -Darmory.iam.oidc.client-secret={{ include "armory-remote-network-agent.client-secret" . }}
                 {{- if .Values.kubernetes.enableClusterAccountMode }}
