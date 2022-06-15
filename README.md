@@ -68,6 +68,19 @@ helm upgrade --install armory-rna armory/remote-network-agent \
 ```
 
 ## Installation with CPU and memory request limits 
+
+### Note:
+
+These memory and CPU limits can only be set to an amount that is higher than the defaults. `podMemoryRequest` and `podMemoryLimit` accepts `Mi` (for Mebibytes) and `M` (for Megabytes) units. `podCPURequest` and `podCPULimit` accept `m` for (millicpu) units.
+
+### Defaults:
+```
+podMemoryRequest: "1500M"
+podMemoryLimit: "2500M"
+podCPURequest: "2000m"
+podCPULimit: "2500m"
+```
+
 ```shell
 # Optionally Add Armory Chart repo, if you haven't
 helm repo add armory https://armory.jfrog.io/artifactory/charts

@@ -103,8 +103,8 @@ podAnnotations: {}
 # - "-Dlogging.level.io.armory.cloud.wormhole=DEBUG"
 extraOpts: []
 
-# Resource management for the remote-network-agent container
-memoryRequest: "1500Mi"
-memoryLimit: "2500Mi"
-cpuRequest: "2000m"
-cpuLimit: "2500m"
+# Resource management for the remote-network-agent pods
+podMemoryRequest: "1500Mi"
+podMemoryLimit: "2500Mi"
+podCPURequest: "2000m"
+podCPULimit: "2500m"

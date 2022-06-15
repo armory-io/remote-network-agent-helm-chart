@@ -42,7 +42,8 @@ spec:
             httpGet:
               path: /health/liveness
               port: 8080
-          {{- include "armory-remote-network-agent.resource-request-limits" . | nindent 8 }}
+          {{$podData := dict "Values" .Values "Type" "pod"}}
+          {{- include "armory-remote-network-agent.request-limits" $podData | nindent 8 | trim }}
           env:
             {{- if .Values.proxy.enabled -}}
               {{- include "armory-remote-network-agent.proxy-settings" . | nindent 12 }}
@@ -50,8 +51,8 @@ spec:
             {{- include "armory-remote-network-agent.pod-env-vars" . | nindent 12 }}
             - name: ADDITIONAL_JVM_OPTS
               value: >-
-                -Xms1000M
-                -Xmx1000M
+                {{$jvmData := dict "Values" .Values "Type" "jvm"}}
+                {{- include "armory-remote-network-agent.request-limits" $jvmData | nindent 12 | trim }}
                 -Darmory.iam.oidc.client-id={{ include "armory-remote-network-agent.client-id" . }}
                 -Darmory.iam.oidc.client-secret={{ include "armory-remote-network-agent.client-secret" . }}
                 {{- if .Values.kubernetes.enableClusterAccountMode }}

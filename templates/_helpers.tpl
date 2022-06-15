@@ -129,41 +129,103 @@ annotations:
     {{- end }}
 {{- end }}
 
-{{/* function for setting resource limits */}}
-{{- define "armory-remote-network-agent.resource-request-limits" }}
-  {{- $memoryRequest := .Values.memoryRequest -}}
-  {{- $cpuRequest := .Values.cpuRequest -}}
-  {{- $memoryLimit := .Values.memoryLimit -}}
-  {{- $cpuLimit := .Values.cpuLimit -}}
-  {{- if (empty $memoryRequest) }}
-    {{- $memoryRequest = "1500Mi" -}}
+{{/* function for setting pod resource limits */}}
+{{- define "armory-remote-network-agent.request-limits" }}
+  {{- $podMemoryRequest := .Values.podMemoryRequest -}}
+  {{- $podCPURequest := .Values.podCPURequest -}}
+  {{- $podMemoryLimit := .Values.podMemoryLimit -}}
+  {{- $podCPULimit := .Values.podCPULimit -}}
+  {{/* set defaults */}}
+  {{- if (empty $podMemoryRequest) }}
+    {{- $podMemoryRequest = "1500Mi" -}}
   {{- end }}
-  {{- if (empty $cpuRequest) }}
-    {{- $cpuRequest = "2000m" -}}
+  {{- if (empty $podCPURequest) }}
+    {{- $podCPURequest = "2000m" -}}
   {{- end }}
-  {{- if (empty $memoryLimit) }}
-    {{- $memoryLimit = "2500Mi" -}}
+  {{- if (empty $podMemoryLimit) }}
+    {{- $podMemoryLimit = "2500Mi" -}}
   {{- end }}
-  {{- if (empty $cpuLimit) }}
-    {{- $cpuLimit = "2500m" -}}
+  {{- if (empty $podCPULimit) }}
+    {{- $podCPULimit = "2500m" -}}
   {{- end }}
-  {{- if not (regexMatch "^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$" $memoryRequest)}}
-    {{- fail "value for memoryRequest is not valid" }}
+  {{/* validate memory and cpu units */}}
+  {{- $memoryReqWithUnit := regexFind "^([0-9.]+)Mi|M$" $podMemoryRequest -}}
+  {{- if (empty $memoryReqWithUnit) }}
+    {{- fail "podMemoryRequest value is not valid, please use Mi or M units" }}
   {{- end }}
-  {{- if not (regexMatch "^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$" $cpuRequest)}}
-    {{- fail "value for cpuRequest is not valid" }}
+  {{- $memoryReq := regexFind "^([0-9.]+)" $podMemoryRequest -}}
+  {{- $cpuReqWithUnit := regexFind "^([0-9.]+)m$" $podCPURequest -}}
+  {{- if (empty $cpuReqWithUnit) }}
+    {{- fail "podCPURequest value is not valid, please use m units" }}
   {{- end }}
-  {{- if not (regexMatch "^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$" $memoryLimit) }}
-    {{- fail "value for memoryLimit is not valid" }}
+  {{- $cpuReq := regexFind "^([0-9.]+)" $podCPURequest -}}
+  {{- $memoryLimitWithUnit := regexFind "^([0-9.]+)Mi|M$" $podMemoryLimit -}}
+  {{- if (empty $memoryLimitWithUnit) }}
+    {{- fail "podMemoryLimit value is not valid, please use Mi or M units" }}
   {{- end }}
-  {{- if not (regexMatch "^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$" $cpuLimit)}}
-    {{- fail "value for cpuLimit is not valid" }}
+  {{- $memoryLimit := regexFind "^([0-9.]+)" $podMemoryLimit -}}
+  {{- $cpuLimitWithUnit := regexFind "^([0-9.]+)m$" $podCPULimit -}}
+  {{- if (empty $cpuLimitWithUnit) }}
+    {{- fail "podCPULimit value is not valid, please use m units" }}
   {{- end }}
+  {{- $cpuLimit := regexFind "^([0-9.]+)" $podCPULimit -}}
+  {{/* do memory unit conversions between Mib and M */}}
+  {{- $memoryReqUnit := "M" -}}
+  {{- if contains "Mi" $podMemoryRequest }}
+    {{- $memoryReqUnit = "Mi" }}
+  {{- end }}
+  {{- $memoryLimitUnit := "M" -}}
+  {{- if contains "Mi" $podMemoryLimit }}
+    {{- $memoryLimitUnit = "Mi" }}
+  {{- end }}
+  {{ $memoryReqMi := float64 1500 -}}
+  {{ $memoryReqM := float64 1573 -}}
+  {{- if eq $memoryReqUnit "M"}}
+    {{ $memoryReqMi = div (mul $memoryReq 95) 100 -}}
+    {{ $memoryReqM = float64 $memoryReq -}}
+  {{- else if eq $memoryReqUnit "Mi"}}
+    {{ $memoryReqMi = float64 $memoryReq -}}
+    {{ $memoryReqM = div (mul 105 (float64 $memoryReq)) 100 -}}
+  {{- end }}
+  {{ $memoryLimitMi := float64 2500 -}}
+  {{ $memoryLimitM := float64 2621 -}}
+  {{- if eq $memoryLimitUnit "M"}}
+    {{ $memoryLimitMi = div (mul (float64 $memoryLimit) 95) 100 -}}
+    {{ $memoryLimitM = float64 $memoryLimit -}}
+  {{- else if eq $memoryLimitUnit "Mi"}}
+    {{ $memoryLimitMi = float64 $memoryLimit -}}
+    {{ $memoryLimitM = div (mul 105 (float64 $memoryLimit)) 100 -}}
+  {{- end }}
+  {{/* validate min values for memory and cpu */}}
+  {{- if gt (float64 $memoryReqMi) (float64 $memoryLimitMi) }}
+    {{- fail "podMemoryLimit must be greater than podMemoryRequest" }}
+  {{- end }}
+  {{- if gt $cpuReq $cpuLimit }}
+    {{- fail "podCPULimit must be greater than podCPURequest" }}
+  {{- end }}
+  {{- if gt (float64 1500) (float64 $memoryReqMi) }}
+    {{- fail "podMemoryReq must be greater than 1500Mi" }}
+  {{- end }}
+  {{- if gt (float64 2500) (float64 $memoryLimitMi) }}
+    {{- fail "podMemoryLimit must be greater than 2500Mi" }}
+  {{- end }}
+  {{- if gt 2000 (int $cpuReq) }}
+    {{- fail "podCPURequest must be greater than 2000m" }}
+  {{- end }}
+  {{- if gt 2500 (int $cpuLimit) }}
+    {{- fail "podCPULimit must be greater than 2500m" }}
+  {{- end }}
+  {{- if eq .Type "pod" -}}
   resources:
     requests:
-      memory: {{ $memoryRequest }}
-      cpu: {{ $cpuRequest }}
+      memory: {{ $memoryReqWithUnit }}
+      cpu: {{ $cpuReqWithUnit }}
     limits:
-      memory: {{ $memoryLimit }}
-      cpu: {{ $cpuLimit }}
+      memory: {{ $memoryLimitWithUnit }}
+      cpu: {{ $cpuLimitWithUnit }}
+  {{- else if eq .Type "jvm"}}
+    {{ $heapSize := div (mul 66 (float64 $memoryReqM)) 100 }}
+    -Xms{{ $heapSize }}M
+    -Xmx{{ $heapSize }}M
+  {{- end }}
 {{- end }}
