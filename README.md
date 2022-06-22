@@ -71,14 +71,26 @@ helm upgrade --install armory-rna armory/remote-network-agent \
 
 ### Note:
 
-These memory and CPU limits can only be set to an amount that is higher than the defaults. `podMemoryRequest` and `podMemoryLimit` accepts `Mi` (for Mebibytes) and `M` (for Megabytes) units. `podCPURequest` and `podCPULimit` accept `m` for (millicpu) units.
+The defaults map to performant values that can be overriden. Increasing the requests and limits is useful when vertical scaling the RNA pods, but horizontal scaling is another approach to increase performance.
+
+ `podMemoryRequest` and `podMemoryLimit` accepts `Mi` (for Mebibytes) and `M` (for Megabytes) units. `podCPURequest` and `podCPULimit` accept `m` for (millicpu) units.
 
 ### Defaults:
 ```
 podMemoryRequest: "1500M"
 podMemoryLimit: "2500M"
-podCPURequest: "2000m"
-podCPULimit: "2500m"
+podCPURequest: "500m"
+podCPULimit: "7500m"
+```
+
+
+You cannot set the requests and limits below the following values:
+
+```
+podMemoryRequest: "500Mi"
+podMemoryLimit: "750Mi"
+podCPURequest: "500m"
+podCPULimit: "750m"
 ```
 
 ```shell

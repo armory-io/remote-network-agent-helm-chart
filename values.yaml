@@ -106,5 +106,5 @@ extraOpts: []
 # Resource management for the remote-network-agent pods
 podMemoryRequest: "1500Mi"
 podMemoryLimit: "2500Mi"
-podCPURequest: "2000m"
-podCPULimit: "2500m"
+podCPURequest: "500m"
+podCPULimit: "750m"

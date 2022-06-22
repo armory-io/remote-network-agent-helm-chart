@@ -178,13 +178,13 @@ tests:
           value: "1500Mi"
       - equal:
           path: spec.template.spec.containers[0].resources.requests.cpu
-          value: "2000m"
+          value: "500m"
       - equal:
           path: spec.template.spec.containers[0].resources.limits.memory
           value: "2500Mi"
       - equal:
           path: spec.template.spec.containers[0].resources.limits.cpu
-          value: "2500m"
+          value: "750m"
   - it: sets the resource request limits when set
     set:
       clientId: encrypted:k8s!n:rna-client-credentials!k:client-id
@@ -265,57 +265,58 @@ tests:
     asserts:
       - failedTemplate:
           errorMessage: podCPULimit must be greater than podCPURequest
-  - it:  fails when memory request is lower than default (Mi unit)
+  - it:  fails when memory request is lower than lower bound (Mi unit)
     set:
       clientId: encrypted:k8s!n:rna-client-credentials!k:client-id
       clientSecret: encrypted:k8s!n:rna-client-credentials!k:client-secret
       podMemoryRequest: 1Mi
     asserts:
       - failedTemplate:
-          errorMessage: podMemoryReq must be greater than 1500Mi
-  - it: fails when memory request is lower than default (M unit)
+          errorMessage: podMemoryRequest must be greater than 500Mi
+  - it: fails when memory request is lower than lower bound (M unit)
     set:
       clientId: encrypted:k8s!n:rna-client-credentials!k:client-id
       clientSecret: encrypted:k8s!n:rna-client-credentials!k:client-secret
       podMemoryRequest: 1M
     asserts:
       - failedTemplate:
-          errorMessage: podMemoryReq must be greater than 1500Mi
-  - it: fails when cpu request is lower than default
+          errorMessage: podMemoryRequest must be greater than 500Mi
+  - it: fails when cpu request is lower than lower bound
     set:
       clientId: encrypted:k8s!n:rna-client-credentials!k:client-id
       clientSecret: encrypted:k8s!n:rna-client-credentials!k:client-secret
       podCPURequest: 1m
+      podCPULimit: 1000m
     asserts:
       - failedTemplate:
-          errorMessage: podCPURequest must be greater than 2000m 
-  - it: fails when memory limit is lower than default (M unit)
+          errorMessage: podCPURequest must be greater than 500m 
+  - it: fails when memory limit is lower than lower bound (M unit)
     set:
       clientId: encrypted:k8s!n:rna-client-credentials!k:client-id
       clientSecret: encrypted:k8s!n:rna-client-credentials!k:client-secret
-      podMemoryLimit: 2000M
-      podMemoryRequest: 1800M
+      podMemoryRequest: 650M
+      podMemoryLimit: 700M
     asserts:
       - failedTemplate:
-          errorMessage: podMemoryLimit must be greater than 2500Mi
-  - it: fails when memory limit is lower than default (Mi unit)
+          errorMessage: podMemoryLimit must be greater than 750Mi
+  - it: fails when memory limit is lower than lower bound (Mi unit)
     set:
       clientId: encrypted:k8s!n:rna-client-credentials!k:client-id
       clientSecret: encrypted:k8s!n:rna-client-credentials!k:client-secret
-      podMemoryLimit: 2000Mi
-      podMemoryRequest: 1800Mi
+      podMemoryRequest: 501Mi
+      podMemoryLimit: 600Mi
     asserts:
       - failedTemplate:
-          errorMessage: podMemoryLimit must be greater than 2500Mi
-  - it: fails when cpu limit is lower than the default
+          errorMessage: podMemoryLimit must be greater than 750Mi
+  - it: fails when cpu limit is lower than the lower bound
     set:
       clientId: encrypted:k8s!n:rna-client-credentials!k:client-id
       clientSecret: encrypted:k8s!n:rna-client-credentials!k:client-secret
-      podCPURequest: 2001m
-      podCPULimit: 2002m
+      podCPURequest: 600m
+      podCPULimit: 700m
     asserts:
       - failedTemplate:
-          errorMessage: podCPULimit must be greater than 2500m
+          errorMessage: podCPULimit must be greater than 750m
   - it: adds heap size as 66% of pod memory request to the ADDITIONAL_OPTS env var
     set:
       clientId: muh-client-id

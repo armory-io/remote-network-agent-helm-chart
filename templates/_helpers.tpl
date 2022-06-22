@@ -140,13 +140,13 @@ annotations:
     {{- $podMemoryRequest = "1500Mi" -}}
   {{- end }}
   {{- if (empty $podCPURequest) }}
-    {{- $podCPURequest = "2000m" -}}
+    {{- $podCPURequest = "500m" -}}
   {{- end }}
   {{- if (empty $podMemoryLimit) }}
     {{- $podMemoryLimit = "2500Mi" -}}
   {{- end }}
   {{- if (empty $podCPULimit) }}
-    {{- $podCPULimit = "2500m" -}}
+    {{- $podCPULimit = "750m" -}}
   {{- end }}
   {{/* validate memory and cpu units */}}
   {{- $memoryReqWithUnit := regexFind "^([0-9.]+)Mi|M$" $podMemoryRequest -}}
@@ -203,17 +203,17 @@ annotations:
   {{- if gt $cpuReq $cpuLimit }}
     {{- fail "podCPULimit must be greater than podCPURequest" }}
   {{- end }}
-  {{- if gt (float64 1500) (float64 $memoryReqMi) }}
-    {{- fail "podMemoryReq must be greater than 1500Mi" }}
+  {{- if gt (float64 500) (float64 $memoryReqMi) }}
+    {{- fail "podMemoryRequest must be greater than 500Mi" }}
   {{- end }}
-  {{- if gt (float64 2500) (float64 $memoryLimitMi) }}
-    {{- fail "podMemoryLimit must be greater than 2500Mi" }}
+  {{- if gt (float64 750) (float64 $memoryLimitMi) }}
+    {{- fail "podMemoryLimit must be greater than 750Mi" }}
   {{- end }}
-  {{- if gt 2000 (int $cpuReq) }}
-    {{- fail "podCPURequest must be greater than 2000m" }}
+  {{- if gt 500 (int $cpuReq) }}
+    {{- fail "podCPURequest must be greater than 500m" }}
   {{- end }}
-  {{- if gt 2500 (int $cpuLimit) }}
-    {{- fail "podCPULimit must be greater than 2500m" }}
+  {{- if gt 750 (int $cpuLimit) }}
+    {{- fail "podCPULimit must be greater than 750m" }}
   {{- end }}
   {{- if eq .Type "pod" -}}
   resources:
