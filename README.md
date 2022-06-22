@@ -67,6 +67,48 @@ helm upgrade --install armory-rna armory/remote-network-agent \
     --namespace armory-rna
 ```
 
+## Installation with CPU and memory request limits 
+
+### Note:
+
+The defaults map to performant values that can be overriden. Increasing the requests and limits is useful when vertical scaling the RNA pods, but horizontal scaling is another approach to increase performance.
+
+ `podMemoryRequest` and `podMemoryLimit` accepts `Mi` (for Mebibytes) and `M` (for Megabytes) units. `podCPURequest` and `podCPULimit` accept `m` for (millicpu) units.
+
+### Defaults:
+```
+podMemoryRequest: "1500M"
+podMemoryLimit: "2500M"
+podCPURequest: "500m"
+podCPULimit: "7500m"
+```
+
+
+You cannot set the requests and limits below the following values:
+
+```
+podMemoryRequest: "500Mi"
+podMemoryLimit: "750Mi"
+podCPURequest: "500m"
+podCPULimit: "750m"
+```
+
+```shell
+# Optionally Add Armory Chart repo, if you haven't
+helm repo add armory https://armory.jfrog.io/artifactory/charts
+# Update repo to fetch latest armory charts
+helm repo update
+# Install or Upgrade armory rna chart
+helm upgrade --install armory-rna armory/remote-network-agent \
+    --set clientId='encrypted:k8s!n:rna-client-credentials!k:client-id' \
+    --set clientSecret='encrypted:k8s!n:rna-client-credentials!k:client-secret' \
+    --set memoryRequest=2000m \
+    --set memoryLimit=2500Mi \
+    --set cpuRequest=1500Mi \
+    --set cpuLimit=2500m \
+    --namespace armory-rna
+```
+
 # Advanced Usage
 
 Copy, read, and then edit the [values.yaml](values.yaml) file.
