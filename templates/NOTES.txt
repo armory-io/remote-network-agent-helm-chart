@@ -2,7 +2,7 @@ Armory Remote Network Agent successfully installed or upgraded.
 
 run the following kubectl command
 
-> kubectl get pods
+> kubectl get pods -n=armory-rna
 
 NAME                                               READY   STATUS    RESTARTS   AGE
 remote-network-agent-deployment-66956bf5cf-h75sx   1/1     Running   0          1m
