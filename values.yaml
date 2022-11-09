@@ -20,7 +20,7 @@
 # - https://docs.armory.io/armory-enterprise/armory-admin/secrets/secrets-s3/
 #
 # If you have a process for injecting secrets as env vars, such as a vault injector sidecar, you can set the client secret to an env var here.
-# ex: clientSecret: ${MY_CUSTOM_ENV_VAR}
+# ex: clientSecret: '{{ env.MY_CLIENT_SECRET }}'
 # ex: https://www.vaultproject.io/docs/platform/k8s/injector
 #
 # It is NOT recommended that you use the plain-text value of your client secret in the values file or as an arg to the helm chart
@@ -49,20 +49,24 @@ image:
 imagePullSecrets: []
 
 # Proxy settings if the agent needs to go through a proxy to connect the agent-hub
+# See below comments or the following for more technical information:
+# - https://github.com/grpc/grpc-go/blob/master/Documentation/proxy.md
+# - https://pkg.go.dev/golang.org/x/net/http/httpproxy#FromEnvironment
 proxy:
   enabled: false
-  scheme: https # must be http or https
-  # The hostname, or address, of the proxy server
-  host: proxy.internal.example.com
-  # The port number of the proxy server.
-  port: 443
-  # Indicates the hosts that should be accessed without going through the proxy.
-  # Typically this defines internal hosts.
-  # The value of this property is a list of hosts, separated by the '|' character.
-  # In addition the wildcard character '*' can be used for pattern matching.
-  # For example nonProxyHosts: '*.foo.com|localhost' will indicate that every hosts in the foo.com domain and the localhost should be accessed directly even if a proxy server is specified.
-  # The default value excludes all common variations of the loopback address.
-  # Defaults to 'localhost|127.*|[::1]'
+  # Either a complete URL or a "host[:port]", in which case the "http" scheme is assumed.
+  # An error is returned if the value is a different form.
+  url: https://proxy.internal.example.com:443
+  # nonProxyHosts specifies a string that contains comma-separated values specifying hosts that should be excluded from proxying.
+  #
+  # Each value is represented by an IP address prefix (1.2.3.4), an IP address prefix in CIDR notation (1.2.3.4/8),
+  # a domain name, or a special DNS label (*).
+  #
+  # An IP address prefix and domain name can also include a literal port number (1.2.3.4:80).
+  # A domain name matches that name and all subdomains. A domain name with a leading "." matches subdomains only.
+  # For example "foo.com" matches "foo.com" and "bar.foo.com"; ".y.com" matches "x.y.com" but not "y.com".
+  # A single asterisk (*) indicates that no proxying should be done.
+  # A best effort is made to parse the string and errors are ignored.
   nonProxyHosts:
 
 # When Kubernetes cluster account mode enabled, it will create a service account, cluster role, and cluster role binding
@@ -93,18 +97,52 @@ podEnvironmentVariables: []
 #   key: value
 podLabels: {}
 
+log:
+  # Can be set to console, console-wide (all the same metadata that gets added to json output) or json
+  type: console
+  # Disable color output
+  disableColor: false
+  # debug,info,warn,error
+  level: info
+
 # Additional annotations for pods
 # podAnnotations:
+#   prometheus.io/scrape: "true"
+#   prometheus.io/path: "/metrics"
+#   prometheus.io/port: "8080"
+#   prometheus.io/scheme: "http"
 #   key: value
 podAnnotations: {}
 
-# Pass extra opts to the agent, such as
-# - "-Dcolor=true"
-# - "-Dlogging.level.io.armory.cloud.wormhole=DEBUG"
-extraOpts: []
+# configure pod resource requests and limits
+# https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#requests-and-limits
+resources: {}
+  # limits:
+  #   cpu: 200m
+  #   memory: 512Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 256Mi
 
-# Resource management for the remote-network-agent pods
-podMemoryRequest: "1500Mi"
-podMemoryLimit: "2500Mi"
-podCPURequest: "500m"
-podCPULimit: "750m"
+# Sets pod's priorityClassName.
+priorityClassName: ""
+
+# Sets the agent's pod dns policy
+# https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-s-dns-policy
+dnsPolicy:
+
+# Sets pod's dnsConfig.
+# https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-dns-config
+dnsConfig: {}
+
+# Sets pod/node affinities.
+# https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity
+affinity: {}
+
+# Sets pod's node selector.
+# https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity
+nodeSelector: {}
+
+# Sets pod's tolerations to node taints.
+# https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
+tolerations: []

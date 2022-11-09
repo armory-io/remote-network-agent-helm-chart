@@ -14,11 +14,9 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: run helm chart unit tests
-        run: |
-          helm plugin install https://github.com/quintush/helm-unittest
-          helm unittest --helm3 --output-file reports/test/results.xml --output-type JUnit .
+        run: make check
       - name: Publish Test Report
         uses: mikepenz/action-junit-report@v2
         if: always()
         with:
-          report_paths: 'reports/test/results.xml'
+          report_paths: 'reports/test/*'
