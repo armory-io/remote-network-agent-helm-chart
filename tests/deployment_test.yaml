@@ -230,3 +230,24 @@ tests:
       - equal:
           path: spec.template.spec.containers[0].resources.limits.cpu
           value: "200m"
+  - it: configures the environment to prod if no env value is present
+    set:
+      clientId: encrypted:k8s!n:rna-client-credentials!k:client-id
+      clientSecret: encrypted:k8s!n:rna-client-credentials!k:client-secret
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: APPLICATION_ENVIRONMENT
+            value: prod
+  - it: configures the environment to staging if env is present
+    set:
+      clientId: encrypted:k8s!n:rna-client-credentials!k:client-id
+      clientSecret: encrypted:k8s!n:rna-client-credentials!k:client-secret
+      environment: staging
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: APPLICATION_ENVIRONMENT
+            value: staging
