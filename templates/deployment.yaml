@@ -11,10 +11,14 @@ spec:
       {{- include "armory-remote-network-agent.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-      {{- include "armory-remote-network-agent.pod-annotations" . | nindent 6 }}
+      {{- if .Values.podAnnotations }}
+        {{- include "armory-remote-network-agent.pod-annotations" . | nindent 6 }}
+      {{- end }}
       labels:
         {{- include "armory-remote-network-agent.selectorLabels" . | nindent 8 }}
-        {{- include "armory-remote-network-agent.pod-labels" . | trim | nindent 8 }}
+        {{- if .Values.podLabels }}
+          {{- include "armory-remote-network-agent.pod-labels" . | trim | nindent 8 }}
+        {{- end }}
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
@@ -25,42 +29,100 @@ spec:
         - name: remote-network-agent
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
-          readinessProbe:
-            httpGet:
-              path: /health/readiness
-              port: 8080
+          {{- if .Values.resources }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          {{- end }}
           livenessProbe:
             httpGet:
               path: /health/liveness
               port: 8080
           startupProbe:
-            initialDelaySeconds: 60
-            periodSeconds: 10
+            periodSeconds: 1
             timeoutSeconds: 1
             successThreshold: 1
-            failureThreshold: 6
+            failureThreshold: 60
             httpGet:
               path: /health/liveness
               port: 8080
-          {{$podData := dict "Values" .Values "Type" "pod"}}
-          {{- include "armory-remote-network-agent.request-limits" $podData | nindent 8 | trim }}
+          {{- if .Values.config }}
+          volumeMounts:
+            - name: overrides-config
+              mountPath: /opt/go-application/config/rna-overrides.yaml
+              subPath: rna-overrides
+          {{- end }}
           env:
+            - name: APPLICATION_NAME
+              value: "rna"
+            - name: APPLICATION_ENVIRONMENT
+              value: {{ .Values.environment | default "prod" }}
+            - name: APPLICATION_VERSION
+              value: "{{ .Values.image.tag | default .Chart.AppVersion }}"
+            - name: LOGGER_TYPE
+              value: "{{ .Values.log.type }}"
+            - name: LOGGER_LEVEL
+              value: "{{ .Values.log.level }}"
+            - name: DISABLE_COLORS
+              value: "{{ .Values.log.disableColor }}"
+            {{- if not (empty .Values.sandboxClusterId) }}
+            - name: agent_sandboxClusterId
+              value: {{ .Values.sandboxClusterId }}
+            {{- end }}
+            - name: oidc_clientId
+              value: "{{ include "armory-remote-network-agent.client-id" . }}"
+            - name: oidc_clientSecret
+              value: "{{ include "armory-remote-network-agent.client-secret" . }}"
+            {{- if not (empty .Values.agentIdentifier) }}
+            - name: agent_identifier
+              value: "{{- .Values.agentIdentifier }}"
+            {{- end }}
+            {{- if .Values.kubernetes.enableClusterAccountMode }}
+            - name: agent_kubernetesClusterModeEnabled
+              value: "true"
+            {{- end }}
+            {{- if .Values.config }}
+            - name: ADDITIONAL_ACTIVE_PROFILES
+              value: overrides
+            {{- end }}
             {{- if .Values.proxy.enabled -}}
               {{- include "armory-remote-network-agent.proxy-settings" . | nindent 12 }}
             {{- end }}
             {{- include "armory-remote-network-agent.pod-env-vars" . | nindent 12 }}
-            - name: ADDITIONAL_JVM_OPTS
-              value: >-
-                {{$jvmData := dict "Values" .Values "Type" "jvm"}}
-                {{- include "armory-remote-network-agent.request-limits" $jvmData | nindent 12 | trim }}
-                -Darmory.iam.oidc.client-id={{ include "armory-remote-network-agent.client-id" . }}
-                -Darmory.iam.oidc.client-secret={{ include "armory-remote-network-agent.client-secret" . }}
-                {{- if .Values.kubernetes.enableClusterAccountMode }}
-                -Dkubernetes-cluster-mode-enabled=true
-                {{- end }}
-                {{ include "armory-remote-network-agent.agent-identifier" . | trim }}
-            {{- if .Values.extraOpts }}
-              {{- range $i, $value := .Values.extraOpts }}
-                {{ $value }}
-              {{- end }}
-            {{- end }}
+      {{- if .Values.config }}
+      volumes:
+        - name: overrides-config
+          configMap:
+            name: rna-config-overrides
+      {{- end }}
+      {{- with include "newrelic.common.priorityClassName" . }}
+      priorityClassName: {{ . }}
+      {{- end }}
+      {{- if .Values.config }}
+      dnsPolicy: {{ .Values.dnsPolicy }}
+      {{- end -}}
+      {{- with include "armory-remote-network-agent.dnsConfig" . }}
+      dnsConfig:
+        {{- . | nindent 8 }}
+      {{- end }}
+      {{- with include "armory-remote-network-agent.nodeSelector" . }}
+      nodeSelector:
+        {{- . | nindent 8 }}
+      {{- end }}
+      {{- with include "armory-remote-network-agent.affinity" . }}
+      affinity:
+        {{- . | nindent 8 }}
+      {{- end }}
+      {{- with include "armory-remote-network-agent.tolerations" . }}
+      tolerations:
+        {{- . | nindent 8 }}
+      {{- end }}
+{{- if .Values.config }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rna-config-overrides
+data:
+  rna-overrides: |
+    {{ .Values.config | toYaml }}
+{{- end }}

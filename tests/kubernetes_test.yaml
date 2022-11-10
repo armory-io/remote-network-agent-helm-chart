@@ -11,12 +11,11 @@ tests:
       clientId: muh-client-id
       clientSecret: muh-client-secret
     asserts:
-      - equal:
-          path: spec.template.spec.containers[0].env[0].name
-          value: "ADDITIONAL_JVM_OPTS"
-      - matchRegex:
-          path: spec.template.spec.containers[0].env[0].value
-          pattern: .*?-Dkubernetes-cluster-mode-enabled=true.*?
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: agent_kubernetesClusterModeEnabled
+            value: 'true'
   - it: disables the cluster mode system property when kubernetes.enableClusterAccountMode is set to false
     template: deployment.yaml
     set:
@@ -25,12 +24,11 @@ tests:
       kubernetes:
         enableClusterAccountMode: false
     asserts:
-      - equal:
-          path: spec.template.spec.containers[0].env[0].name
-          value: "ADDITIONAL_JVM_OPTS"
-      - notMatchRegex:
-          path: spec.template.spec.containers[0].env[0].value
-          pattern: .*?-Dkubernetes-cluster-mode-enabled.*?
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: agent_kubernetesClusterModeEnabled
+            value: 'true'
   - it: creates a cluster role when kubernetes.enableClusterAccountMode is set to true
     template: cluster-role.yaml
     set:

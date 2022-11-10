@@ -19,41 +19,27 @@ tests:
     asserts:
       - isKind:
           of: Deployment
-      - equal:
-          path: spec.template.spec.containers[0].env[0].name
-          value: "ADDITIONAL_JVM_OPTS"
-      - matchRegex:
-          path: spec.template.spec.containers[0].env[0].value
-          pattern: .*?-Darmory.iam.oidc.client-id=encrypted:k8s!n:rna-client-credentials!k:client-id.*?
-      - matchRegex:
-          path: spec.template.spec.containers[0].env[0].value
-          pattern: .*?-Darmory.iam.oidc.client-secret=encrypted:k8s!n:rna-client-credentials!k:client-secret.*?
-  - it: adds env vars to the rna pod
-    set:
-      clientId: encrypted:k8s!n:rna-client-credentials!k:client-id
-      clientSecret: encrypted:k8s!n:rna-client-credentials!k:client-secret
-      podEnvironmentVariables:
-        - name: FOO
-          value: bar
-    asserts:
-      - equal:
-          path: spec.template.spec.containers[0].env[0].name
-          value: "FOO"
-      - equal:
-          path: spec.template.spec.containers[0].env[0].value
-          value: "bar"
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: "oidc_clientId"
+            value: encrypted:k8s!n:rna-client-credentials!k:client-id
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: "oidc_clientSecret"
+            value: encrypted:k8s!n:rna-client-credentials!k:client-secret
   - it: sets the agent identifier system prop if agentIdentifier is set
     set:
       clientId: encrypted:k8s!n:rna-client-credentials!k:client-id
       clientSecret: encrypted:k8s!n:rna-client-credentials!k:client-secret
       agentIdentifier: muh-super-cool-agent
     asserts:
-      - equal:
-          path: spec.template.spec.containers[0].env[0].name
-          value: "ADDITIONAL_JVM_OPTS"
-      - matchRegex:
-          path: spec.template.spec.containers[0].env[0].value
-          pattern: .*?-Dagent-identifier=muh-super-cool-agent.*?
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: agent_identifier
+            value: muh-super-cool-agent
   - it: maps podAnnotations to annotations on the agent pod
     set:
       clientId: muh-client-id
@@ -76,51 +62,17 @@ tests:
           value: labelValue
   - it: maps podEnvironmentVariables to environment vars on the deployment
     set:
-      clientId: muh-client-id
-      clientSecret: muh-client-secret
+      clientId: encrypted:k8s!n:rna-client-credentials!k:client-id
+      clientSecret: encrypted:k8s!n:rna-client-credentials!k:client-secret
       podEnvironmentVariables:
         - name: FOO
-          value: BAR
+          value: bar
     asserts:
-      - equal:
-          path: spec.template.spec.containers[0].env[0].name
-          value: "FOO"
-      - equal:
-          path: spec.template.spec.containers[0].env[0].value
-          value: "BAR"
-  - it: configures proxy system props, if proxy settings are enabled as values
-    set:
-      clientId: muh-client-id
-      clientSecret: muh-client-secret
-      proxy:
-        enabled: true
-        scheme: https
-        host: muh-proxy.internal.example.com
-        port: 9090
-    asserts:
-      - equal:
-          path: spec.template.spec.containers[0].env[0].name
-          value: "PROXY_OPTS"
-      - equal:
-          path: spec.template.spec.containers[0].env[0].value
-          value: "-Dhttps.proxyHost=muh-proxy.internal.example.com -Dhttps.proxyPort=9090"
-  - it: configures proxy system props, if proxy settings are enabled as values with nonProxyHosts value
-    set:
-      clientId: muh-client-id
-      clientSecret: muh-client-secret
-      proxy:
-        enabled: true
-        scheme: https
-        host: muh-proxy.internal.example.com
-        port: 9090
-        nonProxyHosts: 10.*
-    asserts:
-      - equal:
-          path: spec.template.spec.containers[0].env[0].name
-          value: "PROXY_OPTS"
-      - equal:
-          path: spec.template.spec.containers[0].env[0].value
-          value: "-Dhttps.proxyHost=muh-proxy.internal.example.com -Dhttps.proxyPort=9090 -Dhttp.nonProxyHosts=10.*"
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: FOO
+            value: bar
   - it: uses the replica count value
     set:
       clientId: muh-client-id
@@ -155,183 +107,126 @@ tests:
       - equal:
           path: spec.template.spec.imagePullSecrets[0].name
           value: "regcred"
-  - it: adds defined extraOpts to the ADDITIONAL_OPTS env var
-    set:
-      clientId: muh-client-id
-      clientSecret: muh-client-secret
-      extraOpts:
-        - "-Dfoo=bar"
-    asserts:
-      - equal:
-          path: spec.template.spec.containers[0].env[0].name
-          value: "ADDITIONAL_JVM_OPTS"
-      - matchRegex:
-          path: spec.template.spec.containers[0].env[0].value
-          pattern: .*?-Dfoo=bar.*?
-  - it: sets the resource request limits to defaults
+  - it: creates the config map as expected when custom config is provided
+    documentIndex: 1
     set:
       clientId: encrypted:k8s!n:rna-client-credentials!k:client-id
       clientSecret: encrypted:k8s!n:rna-client-credentials!k:client-secret
+      config:
+        foo: bar
     asserts:
+      - isKind:
+          of: ConfigMap
       - equal:
-          path: spec.template.spec.containers[0].resources.requests.memory
-          value: "1500Mi"
+          path: metadata.name
+          value: rna-config-overrides
       - equal:
-          path: spec.template.spec.containers[0].resources.requests.cpu
-          value: "500m"
-      - equal:
-          path: spec.template.spec.containers[0].resources.limits.memory
-          value: "2500Mi"
-      - equal:
-          path: spec.template.spec.containers[0].resources.limits.cpu
-          value: "750m"
+          path: data.rna-overrides
+          value: |
+            foo: bar
+  - it: configures the deployment as expected when custom config is provided
+    documentIndex: 0
+    set:
+      clientId: encrypted:k8s!n:rna-client-credentials!k:client-id
+      clientSecret: encrypted:k8s!n:rna-client-credentials!k:client-secret
+      config:
+        foo: bar
+    asserts:
+      - isKind:
+          of: Deployment
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: overrides-config
+            configMap:
+              name: rna-config-overrides
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: ADDITIONAL_ACTIVE_PROFILES
+            value: overrides
+      - contains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            name: overrides-config
+            mountPath: /opt/go-application/config/rna-overrides.yaml
+            subPath: rna-overrides
+
+  - it: configures proxy system props, if proxy settings are enabled as values
+    set:
+      clientId: muh-client-id
+      clientSecret: muh-client-secret
+      proxy:
+        enabled: true
+        url: https://muh-proxy.internal.example.com:443
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: HTTPS_PROXY
+            value: https://muh-proxy.internal.example.com:443
+  - it: configures proxy system props, if proxy settings are enabled as values with nonProxyHosts value
+    set:
+      clientId: muh-client-id
+      clientSecret: muh-client-secret
+      proxy:
+        enabled: true
+        url: https://muh-proxy.internal.example.com:443
+        nonProxyHosts: 10.*
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: HTTPS_PROXY
+            value: https://muh-proxy.internal.example.com:443
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: NO_PROXY
+            value: 10.*
+  - it: configures app env if set
+    set:
+      clientId: muh-client-id
+      clientSecret: muh-client-secret
+      environment: dev
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: APPLICATION_ENVIRONMENT
+            value: dev
+  - it: configures app env if set
+    set:
+      clientId: muh-client-id
+      clientSecret: muh-client-secret
+      sandboxClusterId: foo-bar-bam
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: agent_sandboxClusterId
+            value: foo-bar-bam
   - it: sets the resource request limits when set
     set:
       clientId: encrypted:k8s!n:rna-client-credentials!k:client-id
       clientSecret: encrypted:k8s!n:rna-client-credentials!k:client-secret
-      podMemoryRequest: 1600Mi
-      podMemoryLimit: 2600Mi
-      podCPURequest: 2100m
-      podCPULimit: 2600m
+      resources:
+        requests:
+          memory: 256Mi
+          cpu: 100m
+        limits:
+          memory: 512Mi
+          cpu: 200m
     asserts:
       - equal:
           path: spec.template.spec.containers[0].resources.requests.memory
-          value: "1600Mi"
+          value: "256Mi"
       - equal:
           path: spec.template.spec.containers[0].resources.requests.cpu
-          value: "2100m"
+          value: "100m"
       - equal:
           path: spec.template.spec.containers[0].resources.limits.memory
-          value: "2600Mi"
+          value: "512Mi"
       - equal:
           path: spec.template.spec.containers[0].resources.limits.cpu
-          value: "2600m"
-  - it: fails when invalid memory request set
-    set:
-      clientId: encrypted:k8s!n:rna-client-credentials!k:client-id
-      clientSecret: encrypted:k8s!n:rna-client-credentials!k:client-secret
-      podMemoryRequest: 1Potato
-    asserts:
-      - failedTemplate:
-          errorMessage: podMemoryRequest value is not valid, please use Mi or M units
-  - it: fails when invalid cpu request set
-    set:
-      clientId: encrypted:k8s!n:rna-client-credentials!k:client-id
-      clientSecret: encrypted:k8s!n:rna-client-credentials!k:client-secret
-      podCPURequest: 1Potato
-    asserts:
-      - failedTemplate:
-          errorMessage: podCPURequest value is not valid, please use m units
-  - it: fails when invalid memory limit set
-    set:
-      clientId: encrypted:k8s!n:rna-client-credentials!k:client-id
-      clientSecret: encrypted:k8s!n:rna-client-credentials!k:client-secret
-      podMemoryLimit: 1Potato
-    asserts:
-      - failedTemplate:
-          errorMessage: podMemoryLimit value is not valid, please use Mi or M units
-  - it: fails when invalid cpu limit set
-    set:
-      clientId: encrypted:k8s!n:rna-client-credentials!k:client-id
-      clientSecret: encrypted:k8s!n:rna-client-credentials!k:client-secret
-      podCPULimit: 1Potato
-    asserts:
-      - failedTemplate:
-          errorMessage: podCPULimit value is not valid, please use m units
-  - it: fails when memory request is lower than memory limit (Mi unit)
-    set:
-      clientId: encrypted:k8s!n:rna-client-credentials!k:client-id
-      clientSecret: encrypted:k8s!n:rna-client-credentials!k:client-secret
-      podMemoryRequest: 2600Mi
-      podMemoryLimit: 1600Mi
-    asserts:
-      - failedTemplate:
-          errorMessage: podMemoryLimit must be greater than podMemoryRequest
-  - it: fails when memory request is lower than memory limit (M unit)
-    set:
-      clientId: encrypted:k8s!n:rna-client-credentials!k:client-id
-      clientSecret: encrypted:k8s!n:rna-client-credentials!k:client-secret
-      podMemoryRequest: 2600M
-      podMemoryLimit: 1600M
-    asserts:
-      - failedTemplate:
-          errorMessage: podMemoryLimit must be greater than podMemoryRequest
-  - it: fails when cpu request is lower than cpu limit
-    set:
-      clientId: encrypted:k8s!n:rna-client-credentials!k:client-id
-      clientSecret: encrypted:k8s!n:rna-client-credentials!k:client-secret
-      podCPURequest: 3500m
-      podCPULimit: 3000m
-    asserts:
-      - failedTemplate:
-          errorMessage: podCPULimit must be greater than podCPURequest
-  - it:  fails when memory request is lower than lower bound (Mi unit)
-    set:
-      clientId: encrypted:k8s!n:rna-client-credentials!k:client-id
-      clientSecret: encrypted:k8s!n:rna-client-credentials!k:client-secret
-      podMemoryRequest: 1Mi
-    asserts:
-      - failedTemplate:
-          errorMessage: podMemoryRequest must be greater than 500Mi
-  - it: fails when memory request is lower than lower bound (M unit)
-    set:
-      clientId: encrypted:k8s!n:rna-client-credentials!k:client-id
-      clientSecret: encrypted:k8s!n:rna-client-credentials!k:client-secret
-      podMemoryRequest: 1M
-    asserts:
-      - failedTemplate:
-          errorMessage: podMemoryRequest must be greater than 500Mi
-  - it: fails when cpu request is lower than lower bound
-    set:
-      clientId: encrypted:k8s!n:rna-client-credentials!k:client-id
-      clientSecret: encrypted:k8s!n:rna-client-credentials!k:client-secret
-      podCPURequest: 1m
-      podCPULimit: 1000m
-    asserts:
-      - failedTemplate:
-          errorMessage: podCPURequest must be greater than 500m 
-  - it: fails when memory limit is lower than lower bound (M unit)
-    set:
-      clientId: encrypted:k8s!n:rna-client-credentials!k:client-id
-      clientSecret: encrypted:k8s!n:rna-client-credentials!k:client-secret
-      podMemoryRequest: 650M
-      podMemoryLimit: 700M
-    asserts:
-      - failedTemplate:
-          errorMessage: podMemoryLimit must be greater than 750Mi
-  - it: fails when memory limit is lower than lower bound (Mi unit)
-    set:
-      clientId: encrypted:k8s!n:rna-client-credentials!k:client-id
-      clientSecret: encrypted:k8s!n:rna-client-credentials!k:client-secret
-      podMemoryRequest: 501Mi
-      podMemoryLimit: 600Mi
-    asserts:
-      - failedTemplate:
-          errorMessage: podMemoryLimit must be greater than 750Mi
-  - it: fails when cpu limit is lower than the lower bound
-    set:
-      clientId: encrypted:k8s!n:rna-client-credentials!k:client-id
-      clientSecret: encrypted:k8s!n:rna-client-credentials!k:client-secret
-      podCPURequest: 600m
-      podCPULimit: 700m
-    asserts:
-      - failedTemplate:
-          errorMessage: podCPULimit must be greater than 750m
-  - it: adds heap size as 66% of pod memory request to the ADDITIONAL_OPTS env var
-    set:
-      clientId: muh-client-id
-      clientSecret: muh-client-secret
-      podMemoryRequest: 1600Mi
-      podMemoryLimit: 2600Mi
-      podCPURequest: 2100m
-      podCPULimit: 2600m
-    asserts:
-      - equal:
-          path: spec.template.spec.containers[0].env[0].name
-          value: "ADDITIONAL_JVM_OPTS"
-      - matchRegex:
-          path: spec.template.spec.containers[0].env[0].value
-          pattern: .*?Xms1108M.*?
-      - matchRegex:
-          path: spec.template.spec.containers[0].env[0].value
-          pattern: .*?Xmx1108M.*?
+          value: "200m"

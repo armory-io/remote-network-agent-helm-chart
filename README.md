@@ -3,211 +3,99 @@ Helm Chart for Armory's Remote Network Agent
 
 # Basic Usage
 
-Put your client credentials in a kubernetes secret (see [values.yaml](values.yaml) for more secrets management options)
+See [Advanced Configuration](#advanced-configuration) to productionalize (use alternative secrets management, manage agent with Terraform, observability, etc.)
 
 ```shell
+# Put your client credentials in a kubernetes secret (see advanced configuration for more secrets management options)
 kubectl --namespace armory-rna create secret generic rna-client-credentials --type=string --from-literal=client-secret=xxx-yyy-ooo --from-literal=client-id=zzz-ooo-qqq
-```
-
-And choose one of the following basic use cases.
-
-## Basic installation with kubernetes-cluster-mode enabled, without customizing kubernetes account name
-```shell
-# Optionally Add Armory Chart repo, if you haven't
-helm repo add armory https://armory.jfrog.io/artifactory/charts
-# Update repo to fetch latest armory charts
-helm repo update
 # Install or Upgrade armory rna chart
-helm upgrade --install armory-rna armory/remote-network-agent \
-    --set clientId='encrypted:k8s!n:rna-client-credentials!k:client-id' \
-    --set clientSecret='encrypted:k8s!n:rna-client-credentials!k:client-secret' \
-    --namespace armory-rna
-```
-
-## installation with kubernetes-cluster-mode enabled + customizing the agent identifier
-```shell
-# Optionally Add Armory Chart repo, if you haven't
-helm repo add armory https://armory.jfrog.io/artifactory/charts
-# Update repo to fetch latest armory charts
-helm repo update
-# Install or Upgrade armory rna chart
-helm upgrade --install armory-rna armory/remote-network-agent \
+helm upgrade --install armory-rna remote-network-agent \
+    --repo 'https://armory.jfrog.io/artifactory/charts' \
     --set clientId='encrypted:k8s!n:rna-client-credentials!k:client-id' \
     --set clientSecret='encrypted:k8s!n:rna-client-credentials!k:client-secret' \
     --set agentIdentifier=fieldju-microk8s-cluster \
     --namespace armory-rna
 ```
 
-## Installation with kubernetes-cluster-mode disabled
+# Advanced Configuration
+
+Copy, read, and then edit the [values.yaml](values.yaml) file to configure advanced settings such as:
+
+- Secrets Management outside of Kubernetes (AWS Secrets Manager, S3, Vault K8s Injector)
+- Agent Proxy Settings
+- Pod Labels
+- Pod Annotations
+- Pod Env Vars
+- Pod Resource Requests / Limits
+- Pod DNS Settings, 
+- Pod Node selection, 
+- Pod Affinity, 
+- Pod Tolerations
+- Log Configuration
+  - output type (json vs human-readable text), level, color settings
+- Disable kubernetes cluster mode
+- etc 
+
+Install using a custom values file.
+
 ```shell
-# Optionally Add Armory Chart repo, if you haven't
-helm repo add armory https://armory.jfrog.io/artifactory/charts
-# Update repo to fetch latest armory charts
-helm repo update
 # Install or Upgrade armory rna chart
-helm upgrade --install armory-rna armory/remote-network-agent \
-    --set clientId='encrypted:k8s!n:rna-client-credentials!k:client-id' \
-    --set clientSecret='encrypted:k8s!n:rna-client-credentials!k:client-secret' \
-    --set kubernetes.enableClusterAccountMode=false \
+helm upgrade --install \
+    --repo 'https://armory.jfrog.io/artifactory/charts' \
+    -f your-values-file.yaml \
+    armory-rna remote-network-agent \
     --namespace armory-rna
 ```
 
-## Installation with kubernetes-cluster-mode disabled + customizing the agent identifier
-```shell
-# Optionally Add Armory Chart repo, if you haven't
-helm repo add armory https://armory.jfrog.io/artifactory/charts
-# Update repo to fetch latest armory charts
-helm repo update
-# Install or Upgrade armory rna chart
-helm upgrade --install armory-rna armory/remote-network-agent \
-    --set clientId='encrypted:k8s!n:rna-client-credentials!k:client-id' \
-    --set clientSecret='encrypted:k8s!n:rna-client-credentials!k:client-secret' \
-    --set kubernetes.enableClusterAccountMode=false \
-    --set agentIdentifier=fieldju-microk8s-cluster \
-    --namespace armory-rna
+Alternatively manage the agent with [Terraform with your Infrastructure as Code (IaC)](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/resources/release)
+
+```hcl
+resource "helm_release" "sonarqube" {
+  name            = "armory-rna"
+  chart           = "remote-network-agent"
+  repository      = "https://armory.jfrog.io/artifactory/charts"
+  namespace       = "armory-rna"
+  cleanup_on_fail = true
+  values = [file("path/to/values.yaml")]
+}
 ```
 
-## Installation with CPU and memory request limits 
+## Observability
 
-### Note:
+### Metrics
+The agent exposes an endpoint on `:8080/metrics` that is can serve prometheus or open-metrics format.
 
-The defaults map to performant values that can be overriden. Increasing the requests and limits is useful when vertical scaling the RNA pods, but horizontal scaling is another approach to increase performance.
+If you have a prometheus or open-metrics scrapper installed in your cluster such as one of the following:
 
- `podMemoryRequest` and `podMemoryLimit` accepts `Mi` (for Mebibytes) and `M` (for Megabytes) units. `podCPURequest` and `podCPULimit` accept `m` for (millicpu) units.
-
-### Defaults:
-```
-podMemoryRequest: "1500M"
-podMemoryLimit: "2500M"
-podCPURequest: "500m"
-podCPULimit: "7500m"
-```
-
-
-You cannot set the requests and limits below the following values:
-
-```
-podMemoryRequest: "500Mi"
-podMemoryLimit: "750Mi"
-podCPURequest: "500m"
-podCPULimit: "750m"
-```
-
-```shell
-# Optionally Add Armory Chart repo, if you haven't
-helm repo add armory https://armory.jfrog.io/artifactory/charts
-# Update repo to fetch latest armory charts
-helm repo update
-# Install or Upgrade armory rna chart
-helm upgrade --install armory-rna armory/remote-network-agent \
-    --set clientId='encrypted:k8s!n:rna-client-credentials!k:client-id' \
-    --set clientSecret='encrypted:k8s!n:rna-client-credentials!k:client-secret' \
-    --set memoryRequest=2000m \
-    --set memoryLimit=2500Mi \
-    --set cpuRequest=1500Mi \
-    --set cpuLimit=2500m \
-    --namespace armory-rna
-```
-
-# Advanced Usage
-
-Copy, read, and then edit the [values.yaml](values.yaml) file.
-
-```shell
-# Optionally Add Armory Chart repo, if you haven't
-helm repo add armory https://armory.jfrog.io/artifactory/charts
-# Update repo to fetch latest armory charts
-helm repo update
-# Install or Upgrade armory rna chart
-helm upgrade --install -f your-values-file.yaml armory-rna armory/remote-network-agent --namespace armory-rna
-```
-
-# Migrating from the Armory/Aurora meta helm chart
-
-## Step 1: Update Client Credentials Scope in the Cloud Console
-
-Go to the [Cloud Console](https://console.cloud.armory.io/configuration/credentials) and update the credentials you are using for your agent to have the newly required `connect:agentHub` scope. 
-
-This scope is required to connect to the new agent-hub endpoint https://agent-hub.cloud.armory.io
-
-## Step 2: Migrate your agent release from armory/aurora -> armory/remote-network-agent
-
-If you installed the the armory/aurora helm chart like the following
-
-```shell
-helm install armory-rna armory/aurora \
-      --set agent-k8s.accountName=<target-cluster-name> \
-      --set agent-k8s.clientId=<clientID-for-rna> \
-      --set agent-k8s.clientSecret=<clientSecret-for-rna>
-      --namespace armory-rna
-```
-
-Then you can switch that release to this chart with the following commands and all your settings will be mapped.
-The key here is that you are using the same release name `armory-rna` but changing the chart that the release is referencing.
-
-```shell
-helm repo update
-helm upgrade armory-rna armory/remote-network-agent --namespace armory-rna
-```
-
-Please note that we now support and highly encourage the use of a secret's manager.
-If you installed the original chart release via `--set agent-k8s.clientSecret=plain-text-value`
-
-We recommend at least using a kubernetes secret and upgrading via the following.
-
-```shell
-kubectl create secret generic rna-client-credentials --type=string --from-literal=client-secret=xxx-yyy-ooo --from-literal=client-id=zzz-ooo-qqq
-helm repo update
-helm upgrade armory-rna armory/remote-network-agent \
-  --set agent-k8s.clientId='encrypted:k8s!n:rna-client-credentials!k:client-id' \
-  --set agent-k8s.clientSecret='encrypted:k8s!n:rna-client-credentials!k:client-secret' \
-  --namespace armory-rna
-```
-
-See [values.yaml](values.yaml) for more supported secret stores.
-
-# Monitoring
-
-There is a Prometheus (OpenMetrics) scrape endpoint on the pod at `/prometheus` on port `8080`
-
-## Configuring Agent for Scraping
-
-> This information assumes that your  Prometheus is configured with the default settings where it scrapes metrics from a pod based on its annotations.
-
-You can configure the Agent to have its metrics scrapped by adding annotations to the `podAnnotations` value.
-
-Update your chart to include the following annotations:
+You can enable the following annotations in you custom values file.
 
 ```yaml
-...
-podAnnotations:
-  prometheus.io/scrape: true
-  prometheus.io/path: /prometheus
-  prometheus.io/port: 8080
-...
+ podAnnotations:
+   prometheus.io/scrape: "true"
+   prometheus.io/path: "/metrics"
+   prometheus.io/port: "8080"
+   prometheus.io/scheme: "http"
 ```
 
-## Customizing the Metrics
+### Logging
 
-In advanced use cases, you might want to disallow metrics or add custom tags, labels, or dimensions to your metrics. 
-
-For more information, see the official [actuator metrics documentation](https://docs.spring.io/spring-boot/docs/current/reference/html/actuator.html#actuator.metrics).
-
-You can set properties described in the actuator docs with the `extraOpts` value option.
-
-Update your chart values to use the `extraOpts` option. For example:
+By default the agent logs in a human-readable text, but you can enable structured json logging, which is often more appropriate for log aggregation (splunk, newrelic, etc)
 
 ```yaml
-extraOpts:
-  - "-Dmanagement.metrics.enable.example.remote=false"
+log:
+  # Can be set to console or json
+  type: console
 ```
 
 # Development
 
 ## Testing / TDD'ing
 
-Install the [unnitest helm plugin](https://github.com/quintush/helm-unittest) 
+This project uses [unnitest helm plugin](https://github.com/quintush/helm-unittest) for unit testing, see its docs. 
 
 ```bash
-helm unittest --helm3 helm-chart
+# requires docker and node
+make check
 ```
+
+You can also configure a values file in [scratch/values.yaml](scratch/values.yaml) and run [render.sh](render.sh) and it will produce  [scratch/manifests.yaml](scratch/manifests.yaml)

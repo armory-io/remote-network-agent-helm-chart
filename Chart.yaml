@@ -3,13 +3,13 @@ type: application
 
 name: remote-network-agent
 home: https://armory.io/
-description: Enable the use of Armory Services with your privatly networked resources
+description: Enable the use of Armory Services with your privately networked resources.
 
 # The Chart Version
 version: "0.0.0-iam-am-changed-in-ci"
 
 # The Agent Version
-appVersion: v2.1.16
+appVersion: v3.0.7
 
 maintainers:
   - name: Armory Engineering
