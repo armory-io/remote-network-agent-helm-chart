@@ -11,7 +11,7 @@ clean:
 .PHONY: test
 test:
 	@echo "Running Helm unittest"
-	@docker run -ti --rm -v ${HOME}:${HOME} -w ${PWD} \
+	@docker run --rm -v ${HOME}:${HOME} -w ${PWD} \
 		quintush/helm-unittest \
 		--helm3 \
 		--output-file reports/test/results.xml \
