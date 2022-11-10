@@ -18,20 +18,10 @@ test:
 		--output-type JUnit . \
 		|| echo "TESTS FAILED"
 
-.PHONY: test-ci
-test-ci:
-	@echo "Running Helm unittest"
-	@docker run --rm -v ${HOME}:${HOME} -w ${PWD} \
-		quintush/helm-unittest \
-		--helm3 \
-		--output-file reports/test/results.xml \
-		--output-type JUnit . \
-		|| echo "TESTS FAILED"
-
 .PHONY: report
 report:
 	@echo "building html report"
 	npx -y xunit-viewer -r reports/test/results.xml -o reports/test/results.html
 
 .PHONY: check
-check: clean build-dirs test-ci report
+check: clean build-dirs test report
