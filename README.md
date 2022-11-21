@@ -50,7 +50,7 @@ helm upgrade --install \
 Alternatively manage the agent with [Terraform with your Infrastructure as Code (IaC)](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/resources/release)
 
 ```hcl
-resource "helm_release" "sonarqube" {
+resource "helm_release" "armory-rna" {
   name            = "armory-rna"
   chart           = "remote-network-agent"
   repository      = "https://armory.jfrog.io/artifactory/charts"
