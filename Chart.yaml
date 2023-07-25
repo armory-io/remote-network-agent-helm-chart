@@ -8,7 +8,7 @@ description: Enable the use of Armory Services with your privately networked res
 # The Chart Version
 version: "0.0.0-iam-am-changed-in-ci"
 
-# The Agent Version
+# The Remote Network Agent Version
 appVersion: v3.0.31
 
 maintainers:

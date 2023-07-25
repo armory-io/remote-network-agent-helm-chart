@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
 
 ###
-# Ensure that the system has helm installed, since RNA is installed via a helm chart
+# Ensure that the system has Helm installed, since the RNA is installed via a Helm chart
 ##
 verify_that_helm_is_installed() {
   if ! command -v helm > /dev/null; then
     echo "Not found."
     echo "======================================================================================================"
-    echo " Please install helm  https://helm.sh/docs/intro/install/ and ensure that it is on your path."
+    echo " Please install Helm  https://helm.sh/docs/intro/install/ and ensure that it is on your path."
     echo ""
-    echo " Restart after installing helm."
+    echo " Restart after installing Helm."
     echo "======================================================================================================"
     echo ""
     exit 1
@@ -23,8 +23,8 @@ verify_that_helm_is_installed() {
 }
 
 ###
-# Ensure that the system has kubernetes installed, since we store RNA's OIDC Client ID and
-# Client Secret as a kubernetes Secret
+# Ensure that the system has Kubernetes installed, since we store the RNA's Client ID and
+# Client Secret as a Kubernetes Secret
 ##
 verify_that_kubectl_is_installed() {
     if ! command -v kubectl > /dev/null; then
@@ -59,12 +59,12 @@ main() {
 
   CLIENT_ID="${2}"
   if [[ -z "$CLIENT_ID" ]]; then
-      read -r -p "Enter your OIDC Client ID for your RNA installation: " CLIENT_ID
+      read -r -p "Enter your Client ID for your RNA installation: " CLIENT_ID
   fi
 
   CLIENT_SECRET="${3}"
   if [[ -z "$CLIENT_SECRET" ]]; then
-      read -r -s -p "Enter your OIDC Client Secret for your RNA installation: " CLIENT_SECRET
+      read -r -s -p "Enter your Client Secret for your RNA installation: " CLIENT_SECRET
   fi
 
   helm repo add armory https://armory.jfrog.io/artifactory/charts
