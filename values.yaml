@@ -74,7 +74,6 @@ proxy:
 # The RNA then registers itself as a deployable Kubernetes target from within CD-as-a-Service.
 #
 # When Kubernetes cluster account mode is disabled, the RNA only allows you to make network calls to networked resources.
-# You have to configure Kubernetes accounts in the CD-as-a-Service Console to have deployable Kubernetes targets.
 kubernetes:
   enableClusterAccountMode: true
   # RBAC permissions granted to the ServiceAccount for the RNA
