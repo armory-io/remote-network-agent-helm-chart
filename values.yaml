@@ -1,29 +1,29 @@
-# clientId and clientSecret are your Armory Cloud Client Credentials, they must have the `connect:agentHub` scope
-# Go to https://console.cloud.armory.io/configuration/credentials to create credentials or add the scope, if you haven't
+# clientId and clientSecret are your CD-as-a-Service Client Credentials, which must have the `Remote Network Agent` scope.
+# Go to https://console.cloud.armory.io/configuration/credentials to create credentials or add the scope.
 #
-# You can configure the client id and secret using any Armory Enterprise Secrets token.
+# You can configure the clientId and clientSecret using a Kubernetes secret or an Armory Continuous Deployment Secrets token.
 #
-# EX: using kubernetes secrets
-# Save the client credentials as a kubernetes secret
-# kubectl -ns armory-remote-network-agent create secret generic rna-client-credentials --type=string --from-literal=client-secret=xxx-yyy-ooo --from-literal=client-id=zzz-ooo-qqq
-# Set the clientSecret value as
+# EX: using Kubernetes secrets
+# Save your Client Credentials as a Kubernetes secret
+# kubectl -ns armory-rna create secret generic rna-client-credentials --type=string --from-literal=client-secret=xxx-yyy-ooo --from-literal=client-id=zzz-ooo-qqq
+# Set the clientSecret value as:
 # clientSecret: encrypted:k8s!n:rna-client-credentials!k:client-secret
 #
-# EX: using AWS secrets manager
+# EX: using AWS Secrets Manager
 # ex: clientSecret: encrypted:secrets-manager!r:us-west-2!s:some-aws-sm-secret-name!k:client-secret
 # See:
-# - https://docs.armory.io/armory-enterprise/armory-admin/secrets/
-# - https://docs.armory.io/armory-enterprise/armory-admin/secrets/secrets-kubernetes/ (ignore the note saying it only works with operator, it has been back ported to RNA)
-# - https://docs.armory.io/armory-enterprise/armory-admin/secrets/secrets-vault/
-# - https://docs.armory.io/armory-enterprise/armory-admin/secrets/secrets-aws-sm/
-# - https://docs.armory.io/armory-enterprise/armory-admin/secrets/secrets-gcs/
-# - https://docs.armory.io/armory-enterprise/armory-admin/secrets/secrets-s3/
+# - https://docs.armory.io/continuous-deployment/armory-admin/secrets/
+# - https://docs.armory.io/continuous-deployment/armory-admin/secrets/secrets-kubernetes/ (ignore the note saying it only works with Operator; it has been back ported to RNA)
+# - https://docs.armory.io/continuous-deployment/armory-admin/secrets/secrets-vault/
+# - https://docs.armory.io/continuous-deployment/armory-admin/secrets/secrets-aws-sm/
+# - https://docs.armory.io/continuous-deployment/armory-admin/secrets/secrets-gcs/
+# - https://docs.armory.io/continuous-deployment/armory-admin/secrets/secrets-s3/
 #
-# If you have a process for injecting secrets as env vars, such as a vault injector sidecar, you can set the client secret to an env var here.
+# If you have a process for injecting secrets as env vars, such as a vault injector sidecar, you can set the clientSecret to an env var here.
 # ex: clientSecret: '{{ env.MY_CLIENT_SECRET }}'
 # ex: https://www.vaultproject.io/docs/platform/k8s/injector
 #
-# It is NOT recommended that you use the plain-text value of your client secret in the values file or as an arg to the helm chart
+# Do NOT use the plain text value of clientSecret in the values file or as an arg to the Helm chart!
 clientId:
 clientSecret:
 
@@ -32,8 +32,8 @@ clientSecret:
 # All settings below this line are optional
 #
 #############################################################################
-# Defaults to the name used when creating the credentials for this agent.
-# This is that name that pipelines must reference to deploy to the cluster that the agent is running in.
+# Defaults to the name used when creating the Client Credentials for this RNA.
+# This is that name that your CD-as-a-Service deployment references to deploy to the cluster that the RNA is running in.
 agentIdentifier:
 
 replicaCount: 2
@@ -48,8 +48,8 @@ image:
 #  - name: regcred
 imagePullSecrets: []
 
-# Proxy settings if the agent needs to go through a proxy to connect the agent-hub
-# See below comments or the following for more technical information:
+# Proxy settings if the RNA needs to go through a proxy to connect the Agent Hub
+# See the comments below or the following for more technical information:
 # - https://github.com/grpc/grpc-go/blob/master/Documentation/proxy.md
 # - https://pkg.go.dev/golang.org/x/net/http/httpproxy#FromEnvironment
 proxy:
@@ -69,30 +69,29 @@ proxy:
   # A best effort is made to parse the string and errors are ignored.
   nonProxyHosts:
 
-# When Kubernetes cluster account mode enabled, it will create a service account, cluster role, and cluster role binding
-# The created service account w/ cluster role binding is applied to the agent.
-# The agent then registers its self as a deployable Kubernetes target from within Armory Cloud.
+# When Kubernetes cluster account mode is enabled, installation creates a ServiceAccount, ClusterRole, and ClusterRoleBinding.
+# The created ServiceAccount with ClusterRoleBinding is applied to the RNA.
+# The RNA then registers itself as a deployable Kubernetes target from within CD-as-a-Service.
 #
-# When Kubernetes cluster account mode is disabled, the agent only allows you to make network calls to networked resources.
-# You will have to configure Kubernetes Accounts in the Armory Cloud Console to have deployable Kubernetes targets.
+# When Kubernetes cluster account mode is disabled, the RNA only allows you to make network calls to networked resources.
 kubernetes:
   enableClusterAccountMode: true
-  # RBAC permissions that will be granted to the service account for the agent
+  # RBAC permissions granted to the ServiceAccount for the RNA
   clusterRoleRules:
     - apiGroups: [ "*" ]
       resources: [ "*" ]
       verbs: [ "*" ]
   serviceAccount:
-    # Annotations to add to the service account
+    # Annotations to add to the ServiceAccount
     annotations: {}
 
-# Additional environment variables to add to the pods
+# Additional environment variables to add to the Pods
 # podEnvironmentVariables:
 #  - name: FOO
 #    value: bar
 podEnvironmentVariables: []
 
-# Additional labels to add to the pods:
+# Additional labels to add to the Pods:
 # podLabels:
 #   key: value
 podLabels: {}
@@ -105,7 +104,7 @@ log:
   # debug,info,warn,error
   level: info
 
-# Additional annotations for pods
+# Additional annotations for Pods
 # podAnnotations:
 #   prometheus.io/scrape: "true"
 #   prometheus.io/path: "/metrics"
@@ -114,7 +113,7 @@ log:
 #   key: value
 podAnnotations: {}
 
-# configure pod resource requests and limits
+# Configure Pod resource requests and limits
 # https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#requests-and-limits
 resources: {}
   # limits:
@@ -124,25 +123,25 @@ resources: {}
   #   cpu: 100m
   #   memory: 256Mi
 
-# Sets pod's priorityClassName.
+# Sets Pod's priorityClassName.
 priorityClassName: ""
 
-# Sets the agent's pod dns policy
+# Sets the RNA's Pod DNS policy
 # https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-s-dns-policy
 dnsPolicy:
 
-# Sets pod's dnsConfig.
+# Sets Pod's dnsConfig.
 # https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-dns-config
 dnsConfig: {}
 
-# Sets pod/node affinities.
+# Sets Pod/Node affinities.
 # https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity
 affinity: {}
 
-# Sets pod's node selector.
+# Sets Pod's node selector.
 # https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity
 nodeSelector: {}
 
-# Sets pod's tolerations to node taints.
+# Sets Pod's tolerations to node taints.
 # https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
 tolerations: []
